@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mi perfil — Mi Río Primero</title>
+  <link rel="icon" href="../icons/icon-192.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/app.css" />
+</head>
+<body class="app">
+  <main style="max-width: 640px; margin: 0 auto; padding: 24px 16px 60px;">
+    <a href="feed.html" style="color:var(--text-muted); font-size:13px; text-decoration:none;">← Volver al feed</a>
+
+    <div class="panel" style="margin-top:16px; display:flex; gap:16px; align-items:center;">
+      <img id="perfilFoto" src="https://placehold.co/96x96/0f1723/8b93a1?text=%20" style="width:76px; height:76px; border-radius:50%; object-fit:cover;" />
+      <div>
+        <p id="perfilNombre" style="font-family:var(--font-display); font-size:26px; margin:0;">Cargando...</p>
+        <p id="perfilContacto" style="color:var(--text-muted); margin:2px 0 0; font-size:13px;"></p>
+        <p id="perfilDireccion" style="color:var(--text-muted); margin:2px 0 0; font-size:13px;"></p>
+      </div>
+    </div>
+
+    <h2 style="font-family:var(--font-display); font-size:24px; margin: 28px 0 12px;">Mis pedidos</h2>
+    <div id="listaPedidos"></div>
+    <p class="empty-state" id="pedidosEmpty" hidden><span>Todavía no hiciste ningún pedido.</span></p>
+  </main>
+
+  <script type="module" src="../js/cliente-perfil.js"></script>
+</body>
+</html>

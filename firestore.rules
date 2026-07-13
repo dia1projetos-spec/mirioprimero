@@ -1,0 +1,101 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function role() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && role() == "admin";
+    }
+
+    // ---------- users (rol de cada cuenta) ----------
+    match /users/{uid} {
+      allow read: if isSignedIn() && (request.auth.uid == uid || isAdmin());
+      // El cliente crea su propio doc de rol al registrarse.
+      // El negocio y el admin son creados por el administrador (secondary auth).
+      allow create: if isSignedIn() && request.auth.uid == uid && request.resource.data.role == "cliente";
+      allow create: if isAdmin();
+      allow update, delete: if isAdmin();
+    }
+
+    // ---------- clientes ----------
+    match /clientes/{uid} {
+      allow read: if isSignedIn() && (request.auth.uid == uid || isAdmin());
+      allow create, update: if isSignedIn() && request.auth.uid == uid;
+      allow delete: if isAdmin();
+    }
+
+    // ---------- categorias ----------
+    match /categorias/{catId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ---------- negocios y sus subcolecciones ----------
+    match /negocios/{negocioId} {
+      allow read: if true;
+      allow create: if isAdmin();
+      allow update: if isAdmin() || (isSignedIn() && request.auth.uid == negocioId);
+      allow delete: if isAdmin();
+
+      match /productos/{productoId} {
+        allow read: if true;
+        allow write: if isAdmin() || (isSignedIn() && request.auth.uid == negocioId);
+      }
+
+      match /cupones/{cuponId} {
+        allow read: if true;
+        allow write: if isAdmin() || (isSignedIn() && request.auth.uid == negocioId);
+      }
+    }
+
+    // ---------- pedidos y chat ----------
+    match /pedidos/{pedidoId} {
+      allow create: if isSignedIn() && request.resource.data.clienteUid == request.auth.uid;
+      allow read, update: if isSignedIn() && (
+        resource.data.clienteUid == request.auth.uid ||
+        resource.data.negocioId == request.auth.uid ||
+        isAdmin()
+      );
+
+      match /chat/{mensajeId} {
+        allow read, create: if isSignedIn() && (
+          get(/databases/$(database)/documents/pedidos/$(pedidoId)).data.clienteUid == request.auth.uid ||
+          get(/databases/$(database)/documents/pedidos/$(pedidoId)).data.negocioId == request.auth.uid ||
+          isAdmin()
+        );
+      }
+    }
+
+    // ---------- feed exclusivo del admin ----------
+    match /feedAdmin/{postId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ---------- promociones pendientes de aprobación ----------
+    match /promocionesPendientes/{promoId} {
+      allow create: if isSignedIn() && request.resource.data.negocioId == request.auth.uid;
+      allow read, update, delete: if isAdmin();
+    }
+
+    // ---------- cancelaciones informadas al admin ----------
+    match /cancelacionesAdmin/{id} {
+      allow create: if isSignedIn() && request.resource.data.negocioId == request.auth.uid;
+      allow read: if isAdmin();
+    }
+
+    // ---------- configuración global (ej: precio Delivery HS) ----------
+    match /config/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+  }
+}

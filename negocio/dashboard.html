@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Panel de mi Negocio — Mi Río Primero</title>
+  <link rel="icon" href="../icons/icon-192.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/app.css" />
+</head>
+<body class="app">
+  <div class="app-shell">
+    <aside class="app-sidebar">
+      <p class="app-sidebar__brand">MI NEGOCIO</p>
+      <button class="app-sidebar__link is-active" data-tab="productos">Productos</button>
+      <button class="app-sidebar__link" data-tab="slides">Slides de la tienda</button>
+      <button class="app-sidebar__link" data-tab="cupones">Cupones</button>
+      <button class="app-sidebar__link" data-tab="pedidos">Pedidos</button>
+      <button class="app-sidebar__link" data-tab="delivery">Delivery</button>
+      <div class="app-sidebar__spacer"></div>
+      <button class="app-sidebar__link" id="logoutBtn">Cerrar sesión</button>
+    </aside>
+
+    <main class="app-main">
+      <!-- PRODUCTOS -->
+      <section id="tab-productos" class="tab-section">
+        <div class="app-header">
+          <h1 id="nombreNegocioHeader">Productos</h1>
+          <button class="btn btn--gold" id="btnNuevoProducto">+ Nuevo producto</button>
+        </div>
+        <p style="color:var(--text-muted); font-size:13px; margin-top:-14px;">Podés destacar hasta 3 productos por vez para que aparezcan en el feed.</p>
+        <div class="panel">
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead><tr><th>Foto</th><th>Nombre</th><th>Precio</th><th>Stock</th><th>Destacado</th><th>Promo/Cupón</th><th></th></tr></thead>
+              <tbody id="tablaProductos"></tbody>
+            </table>
+          </div>
+          <p class="empty-state" id="productosEmpty" hidden><span>Todavía no cargaste productos.</span></p>
+        </div>
+      </section>
+
+      <!-- SLIDES -->
+      <section id="tab-slides" class="tab-section" hidden>
+        <div class="app-header"><h1>Slides de la tienda</h1></div>
+        <div class="panel">
+          <form id="formSlide" class="form">
+            <div class="field">
+              <label for="slideFile">Nueva imagen de slide</label>
+              <input id="slideFile" type="file" accept="image/*" required />
+            </div>
+            <p id="slideError" class="form-error"></p>
+            <button type="submit" class="btn btn--gold">Agregar slide</button>
+          </form>
+        </div>
+        <div class="panel">
+          <div id="listaSlides" style="display:flex; gap:12px; flex-wrap:wrap;"></div>
+        </div>
+      </section>
+
+      <!-- CUPONES -->
+      <section id="tab-cupones" class="tab-section" hidden>
+        <div class="app-header">
+          <h1>Cupones</h1>
+          <button class="btn btn--gold" id="btnNuevoCupon">+ Nuevo cupón</button>
+        </div>
+        <div class="panel">
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead><tr><th>Código</th><th>Tipo</th><th>Valor</th><th>Activo</th><th></th></tr></thead>
+              <tbody id="tablaCupones"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- PEDIDOS -->
+      <section id="tab-pedidos" class="tab-section" hidden>
+        <div class="app-header"><h1>Pedidos</h1></div>
+        <div class="panel">
+          <div id="listaPedidos"></div>
+          <p class="empty-state" id="pedidosEmpty" hidden><span>Todavía no recibiste pedidos.</span></p>
+        </div>
+      </section>
+
+      <!-- DELIVERY -->
+      <section id="tab-delivery" class="tab-section" hidden>
+        <div class="app-header"><h1>Delivery</h1></div>
+        <div class="panel">
+          <form id="formDelivery" class="form">
+            <div class="field field-check">
+              <input type="checkbox" id="deliveryPropioActivo" style="width:auto;" />
+              <label for="deliveryPropioActivo" style="margin:0;">Ofrezco delivery propio</label>
+            </div>
+            <div class="field">
+              <label for="deliveryPropioPrecio">Precio de mi delivery propio ($)</label>
+              <input id="deliveryPropioPrecio" type="number" min="0" />
+            </div>
+            <div class="field field-check">
+              <input type="checkbox" id="deliveryHSActivo" style="width:auto;" />
+              <label for="deliveryHSActivo" style="margin:0;">Ofrezco Delivery HS (precio fijado por Mi Río Primero)</label>
+            </div>
+            <p id="deliveryMsg" class="form-success"></p>
+            <button type="submit" class="btn btn--gold">Guardar</button>
+          </form>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Modal producto -->
+  <div class="modal-backdrop" id="modalProducto" hidden>
+    <div class="modal">
+      <h2 id="modalProductoTitulo">Nuevo producto</h2>
+      <form id="formProducto" class="form">
+        <input type="hidden" id="productoId" />
+        <div class="field">
+          <label for="prodNombre">Nombre *</label>
+          <input id="prodNombre" required />
+        </div>
+        <div class="field">
+          <label for="prodPrecio">Precio *</label>
+          <input id="prodPrecio" type="number" min="0" step="1" required />
+        </div>
+        <div class="field">
+          <label for="prodFoto">Foto</label>
+          <input id="prodFoto" type="file" accept="image/*" />
+        </div>
+        <div class="field field-check">
+          <input type="checkbox" id="prodStockActivo" style="width:auto;" />
+          <label for="prodStockActivo" style="margin:0;">Controlar stock</label>
+        </div>
+        <div class="field">
+          <label for="prodStockCantidad">Cantidad en stock</label>
+          <input id="prodStockCantidad" type="number" min="0" />
+        </div>
+        <div class="field field-check">
+          <input type="checkbox" id="prodPromoActivo" style="width:auto;" />
+          <label for="prodPromoActivo" style="margin:0;">Está en promoción (requiere aprobación del admin)</label>
+        </div>
+        <div class="field">
+          <label for="prodPrecioPromo">Precio en promoción</label>
+          <input id="prodPrecioPromo" type="number" min="0" />
+        </div>
+        <p id="productoError" class="form-error"></p>
+        <div class="modal-actions">
+          <button type="button" class="btn btn--outline" id="cerrarModalProducto">Cancelar</button>
+          <button type="submit" class="btn btn--gold">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal cupón -->
+  <div class="modal-backdrop" id="modalCupon" hidden>
+    <div class="modal">
+      <h2>Nuevo cupón</h2>
+      <form id="formCupon" class="form">
+        <div class="field">
+          <label for="cuponCodigo">Código *</label>
+          <input id="cuponCodigo" required placeholder="Ej: BIENVENIDA10" />
+        </div>
+        <div class="field">
+          <label for="cuponTipo">Tipo *</label>
+          <select id="cuponTipo">
+            <option value="porcentaje">Porcentaje (%)</option>
+            <option value="monto">Monto fijo ($)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="cuponValor">Valor *</label>
+          <input id="cuponValor" type="number" min="0" required />
+        </div>
+        <p id="cuponError" class="form-error"></p>
+        <div class="modal-actions">
+          <button type="button" class="btn btn--outline" id="cerrarModalCupon">Cancelar</button>
+          <button type="submit" class="btn btn--gold">Crear cupón</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal cancelar pedido -->
+  <div class="modal-backdrop" id="modalCancelar" hidden>
+    <div class="modal">
+      <h2>Motivo de cancelación</h2>
+      <form id="formCancelar" class="form">
+        <input type="hidden" id="cancelarPedidoId" />
+        <div class="field">
+          <label for="motivoCancelacion">Explicá por qué cancelás este pedido *</label>
+          <textarea id="motivoCancelacion" rows="3" required></textarea>
+        </div>
+        <p style="color:var(--text-muted); font-size:12px;">Este motivo se envía únicamente al administrador de Mi Río Primero.</p>
+        <div class="modal-actions">
+          <button type="button" class="btn btn--outline" id="cerrarModalCancelar">Volver</button>
+          <button type="submit" class="btn btn--danger">Confirmar cancelación</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script type="module" src="../js/negocio-dashboard.js"></script>
+</body>
+</html>

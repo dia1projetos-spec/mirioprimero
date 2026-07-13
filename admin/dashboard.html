@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Panel Administrador — Mi Río Primero</title>
+  <link rel="icon" href="../icons/icon-192.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/app.css" />
+</head>
+<body class="app">
+  <div class="app-shell">
+    <aside class="app-sidebar">
+      <p class="app-sidebar__brand">MI RÍO PRIMERO</p>
+      <button class="app-sidebar__link is-active" data-tab="negocios">Negocios</button>
+      <button class="app-sidebar__link" data-tab="categorias">Categorías</button>
+      <button class="app-sidebar__link" data-tab="clientes">Clientes</button>
+      <button class="app-sidebar__link" data-tab="feed">Feed (videos)</button>
+      <button class="app-sidebar__link" data-tab="promociones">Promociones pendientes</button>
+      <button class="app-sidebar__link" data-tab="delivery">Delivery HS</button>
+      <div class="app-sidebar__spacer"></div>
+      <button class="app-sidebar__link" id="logoutBtn">Cerrar sesión</button>
+    </aside>
+
+    <main class="app-main">
+      <!-- ---------- NEGOCIOS ---------- -->
+      <section id="tab-negocios" class="tab-section">
+        <div class="app-header">
+          <h1>Negocios</h1>
+          <button class="btn btn--gold" id="btnNuevoNegocio">+ Cadastrar negocio</button>
+        </div>
+        <div class="panel">
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr><th>Nombre</th><th>Categoría</th><th>Email</th><th>Tienda</th><th></th></tr>
+              </thead>
+              <tbody id="tablaNegocios"></tbody>
+            </table>
+          </div>
+          <p class="empty-state" id="negociosEmpty" hidden><span>Todavía no cargaste ningún negocio.</span></p>
+        </div>
+      </section>
+
+      <!-- ---------- CATEGORIAS ---------- -->
+      <section id="tab-categorias" class="tab-section" hidden>
+        <div class="app-header"><h1>Categorías</h1></div>
+        <div class="panel">
+          <form id="formCategoria" class="form" style="max-width: 400px; flex-direction: row; align-items: flex-end; gap: 10px;">
+            <div class="field" style="flex:1;">
+              <label for="nombreCategoria">Nueva categoría</label>
+              <input id="nombreCategoria" type="text" placeholder="Ej: Panaderías" required />
+            </div>
+            <button type="submit" class="btn btn--gold btn--sm">Agregar</button>
+          </form>
+        </div>
+        <div class="panel">
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead><tr><th>Categoría</th><th></th></tr></thead>
+              <tbody id="tablaCategorias"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------- CLIENTES ---------- -->
+      <section id="tab-clientes" class="tab-section" hidden>
+        <div class="app-header"><h1>Clientes</h1></div>
+        <div class="panel">
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead><tr><th>Nombre</th><th>Contacto</th><th>Dirección</th><th></th></tr></thead>
+              <tbody id="tablaClientes"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------- FEED VIDEOS ---------- -->
+      <section id="tab-feed" class="tab-section" hidden>
+        <div class="app-header"><h1>Feed — Videos exclusivos</h1></div>
+        <div class="panel">
+          <form id="formFeedVideo" class="form">
+            <div class="field">
+              <label for="feedVideo">Archivo de video</label>
+              <input id="feedVideo" type="file" accept="video/*" required />
+            </div>
+            <div class="field">
+              <label for="feedCaption">Descripción</label>
+              <textarea id="feedCaption" rows="2" placeholder="Escribí un texto para acompañar el video"></textarea>
+            </div>
+            <p id="feedError" class="form-error"></p>
+            <button type="submit" class="btn btn--gold">Publicar en el feed</button>
+          </form>
+        </div>
+        <div class="panel">
+          <div id="listaFeedVideos"></div>
+        </div>
+      </section>
+
+      <!-- ---------- PROMOCIONES ---------- -->
+      <section id="tab-promociones" class="tab-section" hidden>
+        <div class="app-header"><h1>Promociones pendientes de aprobación</h1></div>
+        <div class="panel">
+          <div id="listaPromociones"></div>
+          <p class="empty-state" id="promocionesEmpty" hidden><span>No hay promociones esperando aprobación.</span></p>
+        </div>
+      </section>
+
+      <!-- ---------- DELIVERY HS ---------- -->
+      <section id="tab-delivery" class="tab-section" hidden>
+        <div class="app-header"><h1>Delivery HS</h1></div>
+        <div class="panel">
+          <p style="color: var(--text-muted); margin-top:0;">
+            Este es el precio de delivery que se le muestra al cliente cuando el negocio elige la opción "Delivery HS".
+          </p>
+          <form id="formDeliveryHS" class="form" style="max-width: 320px;">
+            <div class="field">
+              <label for="precioHS">Precio del Delivery HS ($)</label>
+              <input id="precioHS" type="number" min="0" step="1" required />
+            </div>
+            <p id="deliveryMsg" class="form-success"></p>
+            <button type="submit" class="btn btn--gold">Guardar precio</button>
+          </form>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Modal: nuevo negocio -->
+  <div class="modal-backdrop" id="modalNegocio" hidden>
+    <div class="modal">
+      <h2>Cadastrar negocio</h2>
+      <form id="formNegocio" class="form">
+        <div class="field">
+          <label for="negNombre">Nombre del negocio *</label>
+          <input id="negNombre" required />
+        </div>
+        <div class="field">
+          <label for="negCategoria">Categoría *</label>
+          <select id="negCategoria" required></select>
+        </div>
+        <div class="field">
+          <label for="negEmail">Email de acceso *</label>
+          <input id="negEmail" type="email" required />
+        </div>
+        <div class="field">
+          <label for="negPassword">Contraseña inicial *</label>
+          <input id="negPassword" type="password" minlength="6" required />
+        </div>
+        <p id="negocioError" class="form-error"></p>
+        <div class="modal-actions">
+          <button type="button" class="btn btn--outline" id="cerrarModalNegocio">Cancelar</button>
+          <button type="submit" class="btn btn--gold">Cadastrar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script type="module" src="../js/admin-dashboard.js"></script>
+</body>
+</html>

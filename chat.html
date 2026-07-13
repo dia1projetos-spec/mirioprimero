@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chat del pedido — Mi Río Primero</title>
+  <link rel="icon" href="icons/icon-192.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/app.css" />
+</head>
+<body class="app">
+  <main style="max-width: 720px; margin: 0 auto; padding: 24px 16px 60px;">
+    <a href="#" id="volverLink" style="color:var(--text-muted); font-size:13px; text-decoration:none; display:inline-block; margin-bottom:14px;">← Volver</a>
+    <div class="chat-wrap">
+      <div class="chat-header">
+        <p class="chat-header__name" id="chatTitulo">Cargando chat...</p>
+        <p class="chat-header__meta" id="chatMeta"></p>
+      </div>
+      <div class="chat-messages" id="chatMessages"></div>
+      <form class="chat-input-row" id="chatForm">
+        <input type="text" id="chatInput" placeholder="Escribí un mensaje..." autocomplete="off" required />
+        <button type="submit" class="btn btn--gold btn--sm">Enviar</button>
+      </form>
+    </div>
+  </main>
+
+  <script type="module" src="js/chat.js"></script>
+</body>
+</html>
