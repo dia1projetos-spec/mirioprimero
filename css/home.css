@@ -1,0 +1,79 @@
+.install-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px clamp(16px, 4vw, 40px);
+  background: linear-gradient(100deg, var(--panel-2), var(--panel-3));
+  border-bottom: 1px solid var(--line);
+  font-size: 13px;
+  color: var(--text);
+}
+.install-banner__actions { display: flex; align-items: center; gap: 10px; }
+.install-banner__close {
+  background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 15px;
+}
+
+.home-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px clamp(16px, 4vw, 40px);
+  border-bottom: 1px solid var(--line);
+  position: sticky;
+  top: 0;
+  background: var(--night);
+  z-index: 20;
+}
+.home-topbar__brand { display: flex; align-items: center; }
+.home-topbar__logo { height: 44px; width: 44px; border-radius: 12px; object-fit: cover; }
+.home-topbar__nav { display: flex; gap: 10px; align-items: center; }
+
+.categorias-bar { display:flex; gap:10px; overflow-x:auto; padding: 16px clamp(16px,4vw,40px); }
+.categoria-chip { flex-shrink:0; padding:8px 16px; border-radius:999px; background: var(--panel); border:1px solid var(--line); font-size:13px; cursor:pointer; white-space:nowrap; color: var(--text); }
+.categoria-chip.is-active { background: linear-gradient(100deg, var(--gold-soft), var(--gold)); color:#1a1305; border-color: transparent; font-weight:700; }
+
+.seccion-titulo { font-family: var(--font-display); font-size: 24px; margin: 24px clamp(16px,4vw,40px) 12px; }
+
+.promos-slider { display:flex; gap:14px; overflow-x:auto; padding: 0 clamp(16px,4vw,40px) 8px; scroll-snap-type: x mandatory; }
+.promo-slide { flex-shrink:0; width: min(300px, 82vw); scroll-snap-align: start; border-radius: var(--radius-lg); overflow:hidden; background: var(--panel); border:1px solid var(--line); cursor:pointer; text-decoration:none; color: var(--text); }
+.promo-slide img { width:100%; height:150px; object-fit:cover; display:block; }
+.promo-slide__info { padding: 12px 14px; }
+.promo-slide__precio { color: var(--gold-soft); font-weight:700; }
+
+.productos-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(180px,1fr)); gap:16px; padding: 0 clamp(16px,4vw,40px) 60px; }
+.producto-card { background: var(--panel); border:1px solid var(--line); border-radius: var(--radius-md); overflow:hidden; text-decoration:none; color: var(--text); display:flex; flex-direction:column; cursor: pointer; border-style: solid; }
+.producto-card img { width:100%; height:130px; object-fit:cover; }
+.producto-card__info { padding: 12px 14px; }
+.producto-card__nombre { font-weight:700; font-size:14px; margin: 0 0 4px; }
+.producto-card__negocio { font-size:12px; color: var(--text-muted); margin: 0 0 6px; }
+.producto-card__precio { color: var(--gold-soft); font-weight:700; }
+
+.whatsapp-fab {
+  position: fixed; right: 20px; bottom: 20px; z-index: 10;
+  width: 56px; height: 56px; border-radius: 50%;
+  background: #25d366; color: #08130c;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 12px 26px -8px rgba(37, 211, 102, 0.6);
+  text-decoration: none;
+}
+.whatsapp-fab svg { width: 28px; height: 28px; color: #08130c; }
+
+.auth-tabs { display: flex; gap: 8px; margin-bottom: 18px; }
+.auth-tab {
+  flex: 1; padding: 10px; border-radius: 999px; border: 1px solid var(--line);
+  background: var(--panel); color: var(--text-muted); font-weight: 700; font-size: 13px; cursor: pointer;
+}
+.auth-tab.is-active { background: linear-gradient(100deg, var(--gold-soft), var(--gold)); color: #1a1305; border-color: transparent; }
+
+.role-pick { display: flex; flex-direction: column; gap: 12px; }
+.role-pick__card {
+  display: flex; flex-direction: column; gap: 4px;
+  padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--line);
+  background: var(--panel); color: var(--text); text-decoration: none; text-align: left;
+  font-family: var(--font-body); cursor: default;
+}
+.role-pick__card strong { font-family: var(--font-display); font-size: 20px; letter-spacing: 0.01em; }
+.role-pick__card span { color: var(--text-muted); font-size: 13px; }
+a.role-pick__card { cursor: pointer; }

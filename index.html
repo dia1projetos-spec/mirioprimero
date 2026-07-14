@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Mi Río Primero — Comercios y clientes en un solo lugar</title>
-  <meta name="description" content="Descargá Mi Río Primero: el marketplace de tu ciudad. Comprá en los comercios locales o sumá tu negocio." />
+  <title>Mi Río Primero — El marketplace de tu ciudad</title>
+  <meta name="description" content="Descubrí los comercios de Río Primero, comprá online y coordiná tu entrega. Descargá la app o entrá como invitado." />
 
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#0B0F14" />
@@ -15,73 +15,53 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet" />
 
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/app.css" />
+  <link rel="stylesheet" href="css/home.css" />
 </head>
-<body>
+<body class="app">
 
-  <!-- Río de fondo, motivo de marca -->
-  <svg class="river-bg" viewBox="0 0 1440 900" preserveAspectRatio="none" aria-hidden="true">
-    <path class="river-path river-path--gold" d="M -100 620 C 250 560, 400 700, 700 640 C 1000 580, 1150 700, 1600 600" />
-    <path class="river-path river-path--blue" d="M -100 700 C 300 640, 480 780, 780 700 C 1050 630, 1200 760, 1600 660" />
-  </svg>
-
-  <header class="topbar">
-    <div class="topbar__brand">
-      <span class="topbar__mark">MI</span>
-      <span class="topbar__city">RÍO PRIMERO</span>
+  <!-- Banner de instalación -->
+  <div class="install-banner" id="installBanner" hidden>
+    <span>📲 Instalá Mi Río Primero como app en tu celular.</span>
+    <div class="install-banner__actions">
+      <button class="btn btn--gold btn--sm" id="installBtn">Descargar</button>
+      <button class="install-banner__close" id="closeInstallBanner" aria-label="Cerrar">✕</button>
     </div>
-    <span class="topbar__tag">Córdoba · Argentina</span>
+  </div>
+
+  <header class="home-topbar">
+    <div class="home-topbar__brand">
+      <img src="assets/logo-nav.png" alt="Mi Río Primero" class="home-topbar__logo" />
+    </div>
+
+    <nav class="home-topbar__nav" id="navLoggedOut">
+      <button class="btn btn--outline btn--sm" id="btnAbrirLogin">Ingresar</button>
+      <button class="btn btn--gold btn--sm" id="btnAbrirRegistro">Crear cuenta</button>
+    </nav>
+
+    <nav class="home-topbar__nav" id="navCliente" hidden>
+      <a href="cliente/perfil.html" class="btn btn--outline btn--sm">Mi perfil</a>
+      <button class="btn btn--gold btn--sm" id="logoutClienteBtn">Salir</button>
+    </nav>
+
+    <nav class="home-topbar__nav" id="navNegocio" hidden>
+      <a href="negocio/dashboard.html" class="btn btn--gold btn--sm">Ir a mi panel</a>
+      <button class="btn btn--outline btn--sm" id="logoutNegocioBtn">Salir</button>
+    </nav>
   </header>
 
-  <main class="hero">
-    <div class="hero__content">
-      <p class="hero__eyebrow">Tu ciudad, en la palma de tu mano</p>
-      <h1 class="hero__title">
-        Todo Río Primero,<br />
-        <span class="hero__title-accent">en una sola app.</span>
-      </h1>
-      <p class="hero__subtitle">
-        Comercios locales, pedidos, delivery y pagos coordinados en un mismo lugar.
-        Descargala gratis y empezá a comprar o a vender hoy mismo.
-      </p>
+  <div class="categorias-bar" id="categoriasBar"></div>
 
-      <button id="installBtn" class="btn btn--gold btn--install" hidden>
-        <svg viewBox="0 0 24 24" class="btn__icon" aria-hidden="true">
-          <path d="M12 3v12m0 0l-4.5-4.5M12 15l4.5-4.5M5 19h14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        Descargar la app
-      </button>
-
-      <p id="installHint" class="hero__hint">
-        Buscá el ícono de <strong>compartir / menú</strong> de tu navegador y elegí
-        <strong>“Agregar a la pantalla de inicio”</strong> para instalarla como app.
-      </p>
-    </div>
-  </main>
-
-  <section class="roles" aria-label="Elegí cómo querés usar la app">
-    <button class="role-card role-card--client" data-role="cliente">
-      <span class="role-card__icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24"><path d="M12 12a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9Zm0 2c-4.4 0-8 2.2-8 5v1h16v-1c0-2.8-3.6-5-8-5Z" fill="currentColor"/></svg>
-      </span>
-      <span class="role-card__label">Soy Cliente</span>
-      <span class="role-card__desc">Descubrí comercios, comprá y coordiná tu entrega por chat.</span>
-      <span class="role-card__cta">Crear mi cuenta →</span>
-    </button>
-
-    <button class="role-card role-card--business" data-role="negocio">
-      <span class="role-card__icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24"><path d="M4 9.5 5.2 4h13.6l1.2 5.5M4 9.5h16M4 9.5V19a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9.5M9 20v-5h6v5" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </span>
-      <span class="role-card__label">Soy Negocio</span>
-      <span class="role-card__desc">Ingresá con el usuario y contraseña que te dio Mi Río Primero.</span>
-      <span class="role-card__cta">Iniciar sesión →</span>
-    </button>
+  <section>
+    <h2 class="seccion-titulo">Promociones</h2>
+    <div class="promos-slider" id="promosSlider"></div>
   </section>
 
-  <footer class="footer">
-    <p>© 2026 Mi Río Primero. Hecho en Río Primero, Córdoba. · <a href="admin/login.html" style="color:inherit;">Administrador</a></p>
-  </footer>
+  <section>
+    <h2 class="seccion-titulo">Para vos</h2>
+    <div class="productos-grid" id="productosGrid"></div>
+    <p class="empty-state" id="feedEmpty" hidden><span>Todavía no hay productos para mostrar.</span></p>
+  </section>
 
   <a
     class="whatsapp-fab"
@@ -96,6 +76,71 @@
     </svg>
   </a>
 
-  <script src="js/script.js"></script>
+  <!-- Modal: Ingresar -->
+  <div class="modal-backdrop" id="modalLogin" hidden>
+    <div class="modal">
+      <div class="auth-tabs">
+        <button class="auth-tab is-active" data-auth-tab="cliente">Soy Cliente</button>
+        <button class="auth-tab" data-auth-tab="negocio">Soy Negocio</button>
+      </div>
+
+      <form id="formLoginCliente" class="form auth-panel">
+        <div class="field">
+          <label for="loginClienteEmail">Email</label>
+          <input id="loginClienteEmail" type="email" required autocomplete="username" />
+        </div>
+        <div class="field">
+          <label for="loginClientePassword">Contraseña</label>
+          <input id="loginClientePassword" type="password" required autocomplete="current-password" />
+        </div>
+        <p id="loginClienteError" class="form-error"></p>
+        <button type="submit" class="btn btn--gold btn--block">Ingresar</button>
+        <p style="text-align:center; font-size:13px; color:var(--text-muted); margin:4px 0 0;">
+          ¿No tenés cuenta? <a href="registro-cliente.html" style="color:var(--gold-soft);">Registrate acá</a>
+        </p>
+      </form>
+
+      <form id="formLoginNegocio" class="form auth-panel" hidden>
+        <div class="field">
+          <label for="loginNegocioEmail">Email</label>
+          <input id="loginNegocioEmail" type="email" required autocomplete="username" />
+        </div>
+        <div class="field">
+          <label for="loginNegocioPassword">Contraseña</label>
+          <input id="loginNegocioPassword" type="password" required autocomplete="current-password" />
+        </div>
+        <p id="loginNegocioError" class="form-error"></p>
+        <button type="submit" class="btn btn--gold btn--block">Ingresar</button>
+        <p style="text-align:center; font-size:13px; color:var(--text-muted); margin:4px 0 0;">
+          ¿Todavía no tenés tu negocio cargado? Escribinos por
+          <a href="https://wa.me/5513981763452" target="_blank" rel="noopener" style="color:var(--gold-soft);">WhatsApp</a>.
+        </p>
+      </form>
+
+      <button type="button" class="btn btn--outline btn--block" id="cerrarModalLogin" style="margin-top:14px;">Cerrar</button>
+    </div>
+  </div>
+
+  <!-- Modal: Crear cuenta -->
+  <div class="modal-backdrop" id="modalRegistro" hidden>
+    <div class="modal">
+      <h2>Crear cuenta</h2>
+      <p style="color:var(--text-muted); font-size:14px; margin-top:-8px;">¿Cómo querés usar Mi Río Primero?</p>
+      <div class="role-pick">
+        <a href="registro-cliente.html" class="role-pick__card">
+          <strong>Soy Cliente</strong>
+          <span>Comprá en los comercios locales.</span>
+        </a>
+        <div class="role-pick__card">
+          <strong>Soy Negocio</strong>
+          <span>Los negocios se cargan desde Mi Río Primero. Escribinos por WhatsApp para sumarte.</span>
+          <a href="https://wa.me/5513981763452" target="_blank" rel="noopener" class="btn btn--outline btn--sm" style="margin-top:8px;">Escribir por WhatsApp</a>
+        </div>
+      </div>
+      <button type="button" class="btn btn--outline btn--block" id="cerrarModalRegistro" style="margin-top:16px;">Cerrar</button>
+    </div>
+  </div>
+
+  <script type="module" src="js/home.js"></script>
 </body>
 </html>

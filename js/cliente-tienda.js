@@ -1,6 +1,7 @@
 import {
   auth,
   db,
+  onAuthStateChanged,
   collection,
   doc,
   getDoc,
@@ -8,7 +9,6 @@ import {
   addDoc,
   serverTimestamp,
 } from "./firebase-config.js";
-import { requireRole } from "./auth-guard.js";
 
 const params = new URLSearchParams(window.location.search);
 const negocioId = params.get("id");
@@ -20,15 +20,23 @@ let negocioData = null;
 let deliveryHSPrecio = 0;
 let productoActual = null;
 
+// La tienda es visible para cualquier visitante (invitado). Solo se exige
+// haber iniciado sesión como cliente en el momento de confirmar una compra.
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    const userSnap = await getDoc(doc(db, "users", user.uid));
+    if (userSnap.exists() && userSnap.data().role === "cliente") {
+      clienteUid = user.uid;
+      const clienteSnap = await getDoc(doc(db, "clientes", clienteUid));
+      clienteData = clienteSnap.data();
+    }
+  }
+});
+
 if (!negocioId) {
   document.getElementById("tiendaNombre").textContent = "Tienda no encontrada";
 } else {
-  requireRole("cliente", "../login-negocio.html").then(async (info) => {
-    clienteUid = info.uid;
-    const clienteSnap = await getDoc(doc(db, "clientes", clienteUid));
-    clienteData = clienteSnap.data();
-    init();
-  });
+  init();
 }
 
 async function init() {
@@ -78,6 +86,11 @@ async function init() {
 }
 
 function abrirModalCompra(productoId, producto, precio) {
+  if (!clienteUid) {
+    alert("Necesitás iniciar sesión como cliente para comprar. Te llevamos a la página principal para ingresar o crear tu cuenta.");
+    window.location.href = "../index.html";
+    return;
+  }
   productoActual = { id: productoId, ...producto, precioFinal: precio };
   document.getElementById("compraProductoNombre").textContent = producto.nombre;
   document.getElementById("compraPrecioBase").textContent = `$${precio}`;

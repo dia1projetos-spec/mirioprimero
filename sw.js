@@ -2,11 +2,14 @@ const CACHE_NAME = "mi-rio-primero-v1";
 const ASSETS = [
   "./",
   "./index.html",
-  "./css/style.css",
-  "./js/script.js",
+  "./css/app.css",
+  "./css/home.css",
+  "./js/home.js",
+  "./js/firebase-config.js",
   "./manifest.json",
   "./icons/icon-192.png",
-  "./icons/icon-512.png"
+  "./icons/icon-512.png",
+  "./assets/logo-nav.png"
 ];
 
 self.addEventListener("install", (event) => {

@@ -53,7 +53,7 @@ form.addEventListener("submit", async (event) => {
       createdAt: serverTimestamp(),
     });
 
-    window.location.href = "cliente/feed.html";
+    window.location.href = "index.html";
   } catch (err) {
     console.error(err);
     errorEl.textContent = mensajeDeError(err);

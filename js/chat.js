@@ -54,7 +54,7 @@ if (!pedidoId) {
     }
 
     miRol = esCliente ? "cliente" : esNegocio ? "negocio" : "admin";
-    volverLink.href = miRol === "negocio" ? "negocio/dashboard.html" : miRol === "cliente" ? "cliente/feed.html" : "admin/dashboard.html";
+    volverLink.href = miRol === "negocio" ? "negocio/dashboard.html" : miRol === "cliente" ? "index.html" : "admin/dashboard.html";
 
     chatTitulo.textContent = miRol === "cliente" ? pedido.negocioNombre : pedido.clienteNombre;
     chatMeta.textContent = `Pedido · Total $${pedido.total ?? "—"} · Estado: ${pedido.estado}`;
