@@ -18,6 +18,12 @@
   box-sizing: border-box;
 }
 
+/* Garantiza que [hidden] siempre gane, sin importar qué otra clase
+   (display:flex/inline-flex/grid) tenga el mismo elemento. */
+[hidden] {
+  display: none !important;
+}
+
 html {
   -webkit-tap-highlight-color: transparent;
 }
