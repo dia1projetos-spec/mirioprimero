@@ -1,3 +1,19 @@
+.header-slides { display:flex; gap:10px; overflow-x:auto; padding: 16px clamp(16px,4vw,40px) 0; scroll-snap-type: x mandatory; }
+.header-slides img { width: min(600px, 92vw); height: 220px; object-fit:cover; border-radius: var(--radius-lg); flex-shrink:0; scroll-snap-align: start; }
+
+.negocios-row { display:flex; gap:18px; overflow-x:auto; padding: 4px clamp(16px,4vw,40px) 8px; }
+.negocio-logo-card { flex-shrink:0; display:flex; flex-direction:column; align-items:center; gap:6px; width:78px; text-decoration:none; color: var(--text); }
+.negocio-logo-card__img { width:64px; height:64px; border-radius:50%; object-fit:cover; background: var(--panel); border:1px solid var(--line); }
+.negocio-logo-card__img--placeholder { display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-size:22px; color: var(--gold-soft); }
+.negocio-logo-card__nombre { font-size:11px; text-align:center; line-height:1.2; color: var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:78px; }
+
+.search-bar-wrap { padding: 16px clamp(16px,4vw,40px) 0; }
+.search-bar { display:flex; align-items:center; gap:10px; background: var(--panel); border:1px solid var(--line); border-radius:999px; padding: 12px 18px; }
+.search-bar__icon { width:18px; height:18px; color: var(--text-muted); flex-shrink:0; }
+.search-bar input { flex:1; background:none; border:none; color: var(--text); font-size:15px; font-family: var(--font-body); }
+.search-bar input:focus { outline:none; }
+.search-bar input::placeholder { color: var(--text-muted); }
+
 .install-banner {
   display: flex;
   align-items: center;

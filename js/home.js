@@ -140,6 +140,48 @@ document.getElementById("btnAbrirRegistro").addEventListener("click", () => (mod
 document.getElementById("cerrarModalRegistro").addEventListener("click", () => (modalRegistro.hidden = true));
 
 // ---------- Feed (visible para invitados) ----------
+let todosLosProductos = [];
+let categoriaActiva = null;
+let textoBusqueda = "";
+
+async function cargarHeaderSlides() {
+  const wrap = document.getElementById("headerSlides");
+  const snap = await getDoc(doc(db, "config", "homeSlides"));
+  const slides = snap.exists() ? snap.data().slides || [] : [];
+  if (slides.length === 0) {
+    wrap.hidden = true;
+    return;
+  }
+  wrap.hidden = false;
+  wrap.innerHTML = slides.map((url) => `<img src="${url}" alt="Mi Río Primero" />`).join("");
+}
+
+async function cargarNegociosLogos() {
+  const section = document.getElementById("negociosRowSection");
+  const row = document.getElementById("negociosRow");
+  row.innerHTML = "";
+  const snap = await getDocs(collection(db, "negocios"));
+
+  if (snap.empty) {
+    section.hidden = true;
+    return;
+  }
+  section.hidden = false;
+
+  snap.forEach((docSnap) => {
+    const n = docSnap.data();
+    const a = document.createElement("a");
+    a.className = "negocio-logo-card";
+    a.href = `cliente/tienda.html?id=${docSnap.id}`;
+    const inicial = (n.nombre || "?").trim().charAt(0).toUpperCase();
+    a.innerHTML = n.logoUrl
+      ? `<img class="negocio-logo-card__img" src="${n.logoUrl}" alt="${escapeHtml(n.nombre)}" />`
+      : `<span class="negocio-logo-card__img negocio-logo-card__img--placeholder">${inicial}</span>`;
+    a.innerHTML += `<span class="negocio-logo-card__nombre">${escapeHtml(n.nombre)}</span>`;
+    row.appendChild(a);
+  });
+}
+
 async function cargarCategorias() {
   const bar = document.getElementById("categoriasBar");
   const chipTodas = document.createElement("button");
@@ -156,7 +198,8 @@ async function cargarCategorias() {
     chip.addEventListener("click", () => {
       document.querySelectorAll(".categoria-chip").forEach((el) => el.classList.remove("is-active"));
       chip.classList.add("is-active");
-      cargarProductos(c.nombre);
+      categoriaActiva = c.nombre;
+      renderProductos();
     });
     bar.appendChild(chip);
   });
@@ -164,9 +207,15 @@ async function cargarCategorias() {
   chipTodas.addEventListener("click", () => {
     document.querySelectorAll(".categoria-chip").forEach((el) => el.classList.remove("is-active"));
     chipTodas.classList.add("is-active");
-    cargarProductos(null);
+    categoriaActiva = null;
+    renderProductos();
   });
 }
+
+document.getElementById("buscarInput").addEventListener("input", (event) => {
+  textoBusqueda = event.target.value.trim().toLowerCase();
+  renderProductos();
+});
 
 async function cargarPromociones() {
   const wrap = document.getElementById("promosSlider");
@@ -198,15 +247,11 @@ async function cargarPromociones() {
   }
 }
 
-async function cargarProductos(categoriaFiltro = null) {
-  const grid = document.getElementById("productosGrid");
-  const empty = document.getElementById("feedEmpty");
-  grid.innerHTML = "";
-
+async function cargarProductos() {
   const snap = await getDocs(query(collectionGroup(db, "productos"), orderBy("createdAt", "desc")));
   const negocioCache = new Map();
 
-  let items = [];
+  todosLosProductos = [];
   for (const docSnap of snap.docs) {
     const negocioId = docSnap.ref.parent.parent.id;
     if (!negocioCache.has(negocioId)) {
@@ -214,9 +259,25 @@ async function cargarProductos(categoriaFiltro = null) {
       negocioCache.set(negocioId, negSnap.exists() ? negSnap.data() : null);
     }
     const negocio = negocioCache.get(negocioId);
-    if (categoriaFiltro && negocio?.categoria !== categoriaFiltro) continue;
-    items.push({ id: docSnap.id, negocioId, negocio, ...docSnap.data() });
+    todosLosProductos.push({ id: docSnap.id, negocioId, negocio, ...docSnap.data() });
   }
+
+  renderProductos();
+}
+
+function renderProductos() {
+  const grid = document.getElementById("productosGrid");
+  const empty = document.getElementById("feedEmpty");
+  grid.innerHTML = "";
+
+  const items = todosLosProductos.filter((p) => {
+    const pasaCategoria = !categoriaActiva || p.categoria === categoriaActiva;
+    const pasaBusqueda =
+      !textoBusqueda ||
+      p.nombre?.toLowerCase().includes(textoBusqueda) ||
+      p.negocio?.nombre?.toLowerCase().includes(textoBusqueda);
+    return pasaCategoria && pasaBusqueda;
+  });
 
   if (items.length === 0) {
     empty.hidden = false;
@@ -244,6 +305,8 @@ function escapeHtml(str = "") {
   return String(str).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
 
+cargarHeaderSlides();
+cargarNegociosLogos();
 cargarCategorias();
 cargarPromociones();
 cargarProductos();

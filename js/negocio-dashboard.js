@@ -32,6 +32,7 @@ async function init() {
   document.getElementById("nombreNegocioHeader").textContent = negocioData?.nombre || "Productos";
   cargarProductos();
   cargarDeliveryForm();
+  mostrarLogoPreview();
   escucharPedidos();
 }
 
@@ -41,7 +42,7 @@ document.querySelectorAll("[data-tab]").forEach((btn) => {
     document.querySelectorAll("[data-tab]").forEach((b) => b.classList.remove("is-active"));
     btn.classList.add("is-active");
     document.querySelectorAll(".tab-section").forEach((s) => (s.hidden = s.id !== `tab-${btn.dataset.tab}`));
-    if (btn.dataset.tab === "slides") cargarSlides();
+    if (btn.dataset.tab === "slides") { cargarSlides(); mostrarLogoPreview(); }
     if (btn.dataset.tab === "cupones") cargarCupones();
   });
 });
@@ -194,6 +195,35 @@ async function cargarProductos() {
     });
   });
 }
+
+// ---------- LOGO ----------
+function mostrarLogoPreview() {
+  const img = document.getElementById("logoPreview");
+  if (negocioData?.logoUrl) {
+    img.src = negocioData.logoUrl;
+    img.style.display = "block";
+  } else {
+    img.style.display = "none";
+  }
+}
+
+document.getElementById("formLogo").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const errorEl = document.getElementById("logoError");
+  errorEl.textContent = "";
+  const file = document.getElementById("logoFile").files[0];
+  if (!file) return;
+  try {
+    const url = await uploadImage(file, `negocios/${negocioId}/logo`);
+    await updateDoc(doc(db, "negocios", negocioId), { logoUrl: url });
+    negocioData.logoUrl = url;
+    document.getElementById("formLogo").reset();
+    mostrarLogoPreview();
+  } catch (err) {
+    console.error(err);
+    errorEl.textContent = "No pudimos subir el logo.";
+  }
+});
 
 // ---------- SLIDES ----------
 document.getElementById("formSlide").addEventListener("submit", async (event) => {

@@ -15,9 +15,11 @@
       <p class="app-sidebar__brand">MI RÍO PRIMERO</p>
       <button class="app-sidebar__link is-active" data-tab="negocios">Negocios</button>
       <button class="app-sidebar__link" data-tab="categorias">Categorías</button>
+      <button class="app-sidebar__link" data-tab="productos">Categorizar productos</button>
       <button class="app-sidebar__link" data-tab="clientes">Clientes</button>
       <button class="app-sidebar__link" data-tab="feed">Feed (videos)</button>
       <button class="app-sidebar__link" data-tab="promociones">Promociones pendientes</button>
+      <button class="app-sidebar__link" data-tab="header">Header del sitio</button>
       <button class="app-sidebar__link" data-tab="delivery">Delivery HS</button>
       <div class="app-sidebar__spacer"></div>
       <button class="app-sidebar__link" id="logoutBtn">Cerrar sesión</button>
@@ -65,7 +67,25 @@
         </div>
       </section>
 
-      <!-- ---------- CLIENTES ---------- -->
+      <!-- ---------- CATEGORIZAR PRODUCTOS ---------- -->
+      <section id="tab-productos" class="tab-section" hidden>
+        <div class="app-header"><h1>Categorizar productos</h1></div>
+        <p style="color:var(--text-muted); font-size:13px; margin-top:-14px;">
+          Cada producto que un negocio carga aparece acá para que vos le asignes una categoría.
+          Los productos sin categoría no van a aparecer al filtrar por categoría en la home.
+        </p>
+        <div class="panel">
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead><tr><th>Foto</th><th>Producto</th><th>Negocio</th><th>Categoría</th><th></th></tr></thead>
+              <tbody id="tablaProductosCategorizar"></tbody>
+            </table>
+          </div>
+          <p class="empty-state" id="productosCategorizarEmpty" hidden><span>Todavía no hay productos cargados.</span></p>
+        </div>
+      </section>
+
+
       <section id="tab-clientes" class="tab-section" hidden>
         <div class="app-header"><h1>Clientes</h1></div>
         <div class="panel">
@@ -106,6 +126,29 @@
         <div class="panel">
           <div id="listaPromociones"></div>
           <p class="empty-state" id="promocionesEmpty" hidden><span>No hay promociones esperando aprobación.</span></p>
+        </div>
+      </section>
+
+      <!-- ---------- HEADER DEL SITIO (SLIDES OPCIONALES) ---------- -->
+      <section id="tab-header" class="tab-section" hidden>
+        <div class="app-header"><h1>Header del sitio</h1></div>
+        <p style="color:var(--text-muted); font-size:13px; margin-top:-14px;">
+          Opcional: si subís imágenes acá, aparece un slider arriba de todo en la home.
+          Si no subís ninguna, esa sección simplemente no se muestra — no hay problema en dejarlo vacío.
+        </p>
+        <div class="panel">
+          <form id="formHeaderSlide" class="form">
+            <div class="field">
+              <label for="headerSlideFile">Nueva imagen de slide</label>
+              <input id="headerSlideFile" type="file" accept="image/*" required />
+            </div>
+            <p id="headerSlideError" class="form-error"></p>
+            <button type="submit" class="btn btn--gold">Agregar slide</button>
+          </form>
+        </div>
+        <div class="panel">
+          <div id="listaHeaderSlides" style="display:flex; gap:12px; flex-wrap:wrap;"></div>
+          <p class="empty-state" id="headerSlidesEmpty" hidden><span>Todavía no subiste ninguna imagen para el header.</span></p>
         </div>
       </section>
 

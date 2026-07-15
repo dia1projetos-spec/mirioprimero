@@ -76,8 +76,8 @@ manifest.json + sw.js       PWA instalable
 
 - `users/{uid}` → `{ role: "cliente"|"negocio"|"admin", email }`
 - `clientes/{uid}` → `{ nombre, direccion, edad, contacto, fotoUrl }`
-- `negocios/{uid}` → `{ nombre, categoria, slides:[url...], deliveryPropio:{activo,precio}, deliveryHS:{activo} }`
-  - `negocios/{uid}/productos/{id}` → `{ nombre, precio, fotoUrl, stock:{activo,cantidad}, destacado, promocion:{activo,precioPromo}, promocionAprobada }`
+- `negocios/{uid}` → `{ nombre, categoria, logoUrl, slides:[url...], deliveryPropio:{activo,precio}, deliveryHS:{activo} }`
+  - `negocios/{uid}/productos/{id}` → `{ nombre, precio, fotoUrl, categoria, stock:{activo,cantidad}, destacado, promocion:{activo,precioPromo}, promocionAprobada }`
   - `negocios/{uid}/cupones/{id}` → `{ codigo, tipo:"porcentaje"|"monto", valor, activo }`
 - `categorias/{id}` → `{ nombre }`
 - `pedidos/{id}` → `{ clienteUid, negocioId, productos:[...], total, estado, deliveryTipo, cuponAplicado, motivoCancelacion }`
@@ -86,6 +86,7 @@ manifest.json + sw.js       PWA instalable
 - `promocionesPendientes/{id}` → `{ negocioId, productoId, estado:"pendiente"|"aprobada"|"rechazada" }`
 - `cancelacionesAdmin/{id}` → `{ pedidoId, negocioId, motivo }`
 - `config/deliveryHS` → `{ precio }`
+- `config/homeSlides` → `{ slides:[url...] }` (opcional — si está vacío, el slider no se muestra)
 
 ## 4. Qué quedó simplificado a propósito (y cómo seguir)
 

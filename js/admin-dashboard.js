@@ -10,6 +10,7 @@ import {
   db,
   signOut,
   collection,
+  collectionGroup,
   doc,
   getDocs,
   getDoc,
@@ -40,6 +41,8 @@ tabButtons.forEach((btn) => {
     if (btn.dataset.tab === "feed") cargarFeedVideos();
     if (btn.dataset.tab === "promociones") cargarPromociones();
     if (btn.dataset.tab === "delivery") cargarDeliveryHS();
+    if (btn.dataset.tab === "productos") cargarProductosParaCategorizar();
+    if (btn.dataset.tab === "header") cargarHeaderSlides();
   });
 });
 
@@ -315,6 +318,117 @@ document.getElementById("formDeliveryHS").addEventListener("submit", async (even
   const msg = document.getElementById("deliveryMsg");
   msg.textContent = "Precio guardado.";
   setTimeout(() => (msg.textContent = ""), 2500);
+});
+
+// ---------- CATEGORIZAR PRODUCTOS ----------
+async function cargarProductosParaCategorizar() {
+  const tbody = document.getElementById("tablaProductosCategorizar");
+  const empty = document.getElementById("productosCategorizarEmpty");
+  tbody.innerHTML = "";
+
+  const [productosSnap, categoriasSnap, negociosSnap] = await Promise.all([
+    getDocs(query(collectionGroup(db, "productos"), orderBy("createdAt", "desc"))),
+    getDocs(collection(db, "categorias")),
+    getDocs(collection(db, "negocios")),
+  ]);
+
+  if (productosSnap.empty) {
+    empty.hidden = false;
+    return;
+  }
+  empty.hidden = true;
+
+  const negociosMap = new Map();
+  negociosSnap.forEach((d) => negociosMap.set(d.id, d.data()));
+  const categorias = categoriasSnap.docs.map((d) => d.data().nombre);
+
+  productosSnap.forEach((docSnap) => {
+    const p = docSnap.data();
+    const negocioId = docSnap.ref.parent.parent.id;
+    const negocioNombre = negociosMap.get(negocioId)?.nombre || negocioId;
+
+    const tr = document.createElement("tr");
+    const opciones = [`<option value="">Sin categoría</option>`]
+      .concat(categorias.map((c) => `<option value="${escapeHtml(c)}" ${p.categoria === c ? "selected" : ""}>${escapeHtml(c)}</option>`))
+      .join("");
+
+    tr.innerHTML = `
+      <td>${p.fotoUrl ? `<img src="${p.fotoUrl}" style="width:44px;height:44px;object-fit:cover;border-radius:8px;" />` : "—"}</td>
+      <td>${escapeHtml(p.nombre)}</td>
+      <td>${escapeHtml(negocioNombre)}</td>
+      <td>
+        <select data-categorizar="${negocioId}|${docSnap.id}" style="background:var(--panel); color:var(--text); border:1px solid var(--line); border-radius:8px; padding:6px 10px;">
+          ${opciones}
+        </select>
+      </td>
+      <td><span class="form-success" data-guardado="${negocioId}|${docSnap.id}"></span></td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  tbody.querySelectorAll("[data-categorizar]").forEach((select) => {
+    select.addEventListener("change", async () => {
+      const [negId, prodId] = select.dataset.categorizar.split("|");
+      await updateDoc(doc(db, "negocios", negId, "productos", prodId), { categoria: select.value || null });
+      const msg = tbody.querySelector(`[data-guardado="${negId}|${prodId}"]`);
+      msg.textContent = "Guardado ✔";
+      setTimeout(() => (msg.textContent = ""), 2000);
+    });
+  });
+}
+
+// ---------- HEADER DEL SITIO (SLIDES OPCIONALES) ----------
+async function cargarHeaderSlides() {
+  const wrap = document.getElementById("listaHeaderSlides");
+  const empty = document.getElementById("headerSlidesEmpty");
+  wrap.innerHTML = "";
+  const snap = await getDoc(doc(db, "config", "homeSlides"));
+  const slides = snap.exists() ? snap.data().slides || [] : [];
+
+  if (slides.length === 0) {
+    empty.hidden = false;
+    return;
+  }
+  empty.hidden = true;
+
+  slides.forEach((url, index) => {
+    const div = document.createElement("div");
+    div.style.cssText = "position:relative;";
+    div.innerHTML = `
+      <img src="${url}" style="width:180px;height:100px;object-fit:cover;border-radius:12px;" />
+      <button data-quitar-header-slide="${index}" class="btn btn--danger btn--sm" style="position:absolute;top:6px;right:6px;padding:4px 8px;">✕</button>
+    `;
+    wrap.appendChild(div);
+  });
+
+  wrap.querySelectorAll("[data-quitar-header-slide]").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const nuevaLista = [...slides];
+      nuevaLista.splice(Number(btn.dataset.quitarHeaderSlide), 1);
+      await setDoc(doc(db, "config", "homeSlides"), { slides: nuevaLista }, { merge: true });
+      cargarHeaderSlides();
+    });
+  });
+}
+
+document.getElementById("formHeaderSlide").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const errorEl = document.getElementById("headerSlideError");
+  errorEl.textContent = "";
+  const file = document.getElementById("headerSlideFile").files[0];
+  if (!file) return;
+  try {
+    const url = await uploadImage(file, "header-sitio");
+    const snap = await getDoc(doc(db, "config", "homeSlides"));
+    const slides = snap.exists() ? snap.data().slides || [] : [];
+    slides.push(url);
+    await setDoc(doc(db, "config", "homeSlides"), { slides }, { merge: true });
+    document.getElementById("formHeaderSlide").reset();
+    cargarHeaderSlides();
+  } catch (err) {
+    console.error(err);
+    errorEl.textContent = "No pudimos subir la imagen.";
+  }
 });
 
 function escapeHtml(str = "") {

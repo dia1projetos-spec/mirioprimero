@@ -43,8 +43,23 @@
 
       <!-- SLIDES -->
       <section id="tab-slides" class="tab-section" hidden>
-        <div class="app-header"><h1>Slides de la tienda</h1></div>
+        <div class="app-header"><h1>Logo y slides de la tienda</h1></div>
+
         <div class="panel">
+          <h3 style="margin-top:0; font-family:var(--font-display); font-size:20px;">Logo del negocio</h3>
+          <p style="color:var(--text-muted); font-size:13px;">Aparece en la home junto a los demás negocios.</p>
+          <div style="display:flex; align-items:center; gap:16px;">
+            <img id="logoPreview" src="" alt="" style="width:72px; height:72px; border-radius:50%; object-fit:cover; background:var(--panel-3); display:none;" />
+            <form id="formLogo" style="display:flex; gap:10px; align-items:center;">
+              <input id="logoFile" type="file" accept="image/*" />
+              <button type="submit" class="btn btn--gold btn--sm">Guardar logo</button>
+            </form>
+          </div>
+          <p id="logoError" class="form-error"></p>
+        </div>
+
+        <div class="panel">
+          <h3 style="margin-top:0; font-family:var(--font-display); font-size:20px;">Slides de la tienda</h3>
           <form id="formSlide" class="form">
             <div class="field">
               <label for="slideFile">Nueva imagen de slide</label>
