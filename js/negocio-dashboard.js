@@ -11,6 +11,7 @@ import {
   updateDoc,
   deleteDoc,
   query,
+  where,
   orderBy,
   onSnapshot,
   serverTimestamp,
@@ -332,12 +333,12 @@ async function cargarCupones() {
 
 // ---------- PEDIDOS ----------
 function escucharPedidos() {
-  const q = query(collection(db, "pedidos"));
+  const q = query(collection(db, "pedidos"), where("negocioId", "==", negocioId));
   onSnapshot(q, (snap) => {
     const wrap = document.getElementById("listaPedidos");
     const empty = document.getElementById("pedidosEmpty");
     wrap.innerHTML = "";
-    const pedidosDelNegocio = snap.docs.filter((d) => d.data().negocioId === negocioId);
+    const pedidosDelNegocio = snap.docs;
     if (pedidosDelNegocio.length === 0) {
       empty.hidden = false;
       return;
