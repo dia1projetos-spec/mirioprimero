@@ -60,6 +60,14 @@ const selectCategoriaNegocio = document.getElementById("negCategoria");
 document.getElementById("btnNuevoNegocio").addEventListener("click", () => {
   negocioError.textContent = "";
   formNegocio.reset();
+  document.getElementById("negocioIdEdit").value = "";
+  document.getElementById("modalNegocioTitulo").textContent = "Cadastrar negocio";
+  document.getElementById("submitNegocioBtn").textContent = "Cadastrar";
+  document.getElementById("campoNegEmail").hidden = false;
+  document.getElementById("campoNegPassword").hidden = false;
+  document.getElementById("negEmail").required = true;
+  document.getElementById("negPassword").required = true;
+  document.getElementById("notaEdicionEmail").hidden = true;
   modalNegocio.hidden = false;
 });
 document.getElementById("cerrarModalNegocio").addEventListener("click", () => {
@@ -69,8 +77,24 @@ document.getElementById("cerrarModalNegocio").addEventListener("click", () => {
 formNegocio.addEventListener("submit", async (event) => {
   event.preventDefault();
   negocioError.textContent = "";
+  const idEdit = document.getElementById("negocioIdEdit").value;
   const nombre = document.getElementById("negNombre").value.trim();
   const categoria = selectCategoriaNegocio.value;
+
+  // ---------- Modo edición: solo nombre y categoría ----------
+  if (idEdit) {
+    try {
+      await updateDoc(doc(db, "negocios", idEdit), { nombre, categoria });
+      modalNegocio.hidden = true;
+      cargarNegocios();
+    } catch (err) {
+      console.error(err);
+      negocioError.textContent = "No pudimos guardar los cambios.";
+    }
+    return;
+  }
+
+  // ---------- Modo creación: crea también el login ----------
   const email = document.getElementById("negEmail").value.trim();
   const password = document.getElementById("negPassword").value;
 
@@ -125,9 +149,31 @@ async function cargarNegocios() {
       <td>${escapeHtml(n.categoria || "—")}</td>
       <td>${escapeHtml(n.email)}</td>
       <td><a href="../cliente/tienda.html?id=${docSnap.id}" target="_blank" style="color:var(--gold-soft);">Ver tienda ↗</a></td>
-      <td><button class="btn btn--outline btn--sm" data-eliminar-negocio="${docSnap.id}">Eliminar</button></td>
+      <td>
+        <button class="btn btn--outline btn--sm" data-editar-negocio="${docSnap.id}">Editar</button>
+        <button class="btn btn--outline btn--sm" data-eliminar-negocio="${docSnap.id}">Eliminar</button>
+      </td>
     `;
     tbody.appendChild(tr);
+  });
+
+  tbody.querySelectorAll("[data-editar-negocio]").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const snapNeg = await getDoc(doc(db, "negocios", btn.dataset.editarNegocio));
+      const n = snapNeg.data();
+      negocioError.textContent = "";
+      document.getElementById("negocioIdEdit").value = btn.dataset.editarNegocio;
+      document.getElementById("negNombre").value = n.nombre || "";
+      document.getElementById("negCategoria").value = n.categoria || "";
+      document.getElementById("modalNegocioTitulo").textContent = `Editar: ${n.nombre}`;
+      document.getElementById("submitNegocioBtn").textContent = "Guardar cambios";
+      document.getElementById("campoNegEmail").hidden = true;
+      document.getElementById("campoNegPassword").hidden = true;
+      document.getElementById("negEmail").required = false;
+      document.getElementById("negPassword").required = false;
+      document.getElementById("notaEdicionEmail").hidden = false;
+      modalNegocio.hidden = false;
+    });
   });
 
   tbody.querySelectorAll("[data-eliminar-negocio]").forEach((btn) => {
@@ -218,7 +264,7 @@ formFeedVideo.addEventListener("submit", async (event) => {
   try {
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("upload_preset", "mirioprimero_unsigned");
+    formData.append("upload_preset", "mirioprimero.vercel.app");
     formData.append("folder", "mirioprimero/feed-admin");
     const res = await fetch("https://api.cloudinary.com/v1_1/v3tbrupw/video/upload", {
       method: "POST",

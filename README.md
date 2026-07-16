@@ -13,13 +13,11 @@ con clientes reales. Más abajo te dejo exactamente qué revisar.
 
 ## 1. Antes de publicar: 3 configuraciones obligatorias
 
-### a) Cloudinary — crear un "unsigned upload preset"
-El navegador nunca debe conocer tu API Secret. Por eso las subidas de
-imágenes/videos usan un preset "unsigned":
-1. Entrá a Cloudinary → **Settings → Upload → Upload presets → Add upload preset**.
-2. Signing mode: **Unsigned**.
-3. Ponele de nombre `mirioprimero_unsigned` (o cambiá el nombre en
-   `js/cloudinary.js` y `js/admin-dashboard.js` si preferís otro).
+### a) Cloudinary — el "unsigned upload preset" ya está configurado
+El preset se llama `mirioprimero.vercel.app` y ya está creado con Signing
+mode Unsigned. Si en algún momento lo recreás o cambiás de nombre, actualizá
+`UPLOAD_PRESET` en `js/cloudinary.js` y en `js/admin-dashboard.js` (la subida
+de video del feed) para que coincidan.
 
 ### b) Firestore — publicar las reglas de seguridad
 El archivo `firestore.rules` de esta carpeta tiene las reglas de acceso

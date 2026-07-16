@@ -6,7 +6,7 @@
 // Reemplazá UPLOAD_PRESET por el nombre que le pongas a ese preset.
 
 const CLOUD_NAME = "v3tbrupw";
-const UPLOAD_PRESET = "mirioprimero_unsigned";
+const UPLOAD_PRESET = "mirioprimero.vercel.app";
 
 export async function uploadImage(file, folder = "general") {
   const formData = new FormData();

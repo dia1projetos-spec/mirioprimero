@@ -20,14 +20,15 @@
 </head>
 <body class="app">
 
-  <!-- Banner de instalación -->
-  <div class="install-banner" id="installBanner" hidden>
-    <span>📲 Instalá Mi Río Primero como app en tu celular.</span>
-    <div class="install-banner__actions">
-      <button class="btn btn--gold btn--sm" id="installBtn">Descargar</button>
-      <button class="install-banner__close" id="closeInstallBanner" aria-label="Cerrar">✕</button>
+  <!-- Sección grande: instalar la app -->
+  <section class="install-hero" id="installHero">
+    <div class="install-hero__icon">📲</div>
+    <div class="install-hero__text">
+      <h2>Descargá Mi Río Primero</h2>
+      <p>Instalala como app en tu celular y tené a mano todos los comercios de la ciudad.</p>
     </div>
-  </div>
+    <button class="btn btn--gold" id="installBtn">Descargar ahora</button>
+  </section>
 
   <header class="home-topbar">
     <div class="home-topbar__brand">
@@ -50,7 +51,10 @@
     </nav>
   </header>
 
-  <div class="header-slides" id="headerSlides" hidden></div>
+  <div class="header-slides-wrap" id="headerSlidesWrap" hidden>
+    <div class="header-slides" id="headerSlides"></div>
+    <div class="header-slides-dots" id="headerSlidesDots"></div>
+  </div>
 
   <section id="negociosRowSection" hidden>
     <h2 class="seccion-titulo">Negocios</h2>
@@ -156,6 +160,20 @@
         </div>
       </div>
       <button type="button" class="btn btn--outline btn--block" id="cerrarModalRegistro" style="margin-top:16px;">Cerrar</button>
+    </div>
+  </div>
+
+  <!-- Modal: instrucciones de instalación manual (iOS/Safari) -->
+  <div class="modal-backdrop" id="modalInstalarManual" hidden>
+    <div class="modal">
+      <h2>Instalar en tu celular</h2>
+      <p style="color:var(--text-muted); font-size:14px;">Tu navegador no permite instalar con un solo toque, pero podés agregar la app así:</p>
+      <ol style="color:var(--text); font-size:14px; line-height:1.7; padding-left:20px;">
+        <li>Tocá el botón de <strong>Compartir</strong> (el cuadrado con la flecha hacia arriba) o el menú ⋮ de tu navegador.</li>
+        <li>Elegí <strong>"Agregar a la pantalla de inicio"</strong>.</li>
+        <li>Confirmá — el ícono va a aparecer junto a tus otras apps.</li>
+      </ol>
+      <button type="button" class="btn btn--gold btn--block" id="cerrarModalInstalarManual">Entendido</button>
     </div>
   </div>
 

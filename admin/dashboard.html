@@ -175,8 +175,9 @@
   <!-- Modal: nuevo negocio -->
   <div class="modal-backdrop" id="modalNegocio" hidden>
     <div class="modal">
-      <h2>Cadastrar negocio</h2>
+      <h2 id="modalNegocioTitulo">Cadastrar negocio</h2>
       <form id="formNegocio" class="form">
+        <input type="hidden" id="negocioIdEdit" />
         <div class="field">
           <label for="negNombre">Nombre del negocio *</label>
           <input id="negNombre" required />
@@ -185,18 +186,21 @@
           <label for="negCategoria">Categoría *</label>
           <select id="negCategoria" required></select>
         </div>
-        <div class="field">
+        <div class="field" id="campoNegEmail">
           <label for="negEmail">Email de acceso *</label>
           <input id="negEmail" type="email" required />
         </div>
-        <div class="field">
+        <div class="field" id="campoNegPassword">
           <label for="negPassword">Contraseña inicial *</label>
           <input id="negPassword" type="password" minlength="6" required />
         </div>
+        <p id="notaEdicionEmail" class="form-error" style="color: var(--text-muted);" hidden>
+          El email y la contraseña de acceso no se pueden editar desde acá. Si necesitás cambiarlos, eliminá el negocio y volvé a cargarlo.
+        </p>
         <p id="negocioError" class="form-error"></p>
         <div class="modal-actions">
           <button type="button" class="btn btn--outline" id="cerrarModalNegocio">Cancelar</button>
-          <button type="submit" class="btn btn--gold">Cadastrar</button>
+          <button type="submit" class="btn btn--gold" id="submitNegocioBtn">Cadastrar</button>
         </div>
       </form>
     </div>

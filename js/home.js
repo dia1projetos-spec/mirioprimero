@@ -20,32 +20,40 @@ if ("serviceWorker" in navigator) {
   });
 }
 
-// ---------- Banner de instalación ----------
+// ---------- Sección grande: instalar la app ----------
 let deferredInstallPrompt = null;
-const installBanner = document.getElementById("installBanner");
+const installHero = document.getElementById("installHero");
 const installBtn = document.getElementById("installBtn");
+const modalInstalarManual = document.getElementById("modalInstalarManual");
+
+// Si ya está instalada (modo standalone), no tiene sentido mostrar la sección.
+const yaInstalada =
+  window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+if (yaInstalada) installHero.hidden = true;
 
 window.addEventListener("beforeinstallprompt", (event) => {
   event.preventDefault();
   deferredInstallPrompt = event;
-  if (!sessionStorage.getItem("installBannerCerrado")) installBanner.hidden = false;
 });
 
 installBtn.addEventListener("click", async () => {
-  if (!deferredInstallPrompt) return;
+  if (!deferredInstallPrompt) {
+    // iOS/Safari u otros navegadores que no soportan la instalación con un toque.
+    modalInstalarManual.hidden = false;
+    return;
+  }
   deferredInstallPrompt.prompt();
   await deferredInstallPrompt.userChoice;
   deferredInstallPrompt = null;
-  installBanner.hidden = true;
+  installHero.hidden = true;
 });
 
-document.getElementById("closeInstallBanner").addEventListener("click", () => {
-  installBanner.hidden = true;
-  sessionStorage.setItem("installBannerCerrado", "1");
+document.getElementById("cerrarModalInstalarManual").addEventListener("click", () => {
+  modalInstalarManual.hidden = true;
 });
 
 window.addEventListener("appinstalled", () => {
-  installBanner.hidden = true;
+  installHero.hidden = true;
 });
 
 // ---------- Estado de sesión / navegación ----------
@@ -145,15 +153,33 @@ let categoriaActiva = null;
 let textoBusqueda = "";
 
 async function cargarHeaderSlides() {
+  const outerWrap = document.getElementById("headerSlidesWrap");
   const wrap = document.getElementById("headerSlides");
+  const dotsWrap = document.getElementById("headerSlidesDots");
   const snap = await getDoc(doc(db, "config", "homeSlides"));
   const slides = snap.exists() ? snap.data().slides || [] : [];
+
   if (slides.length === 0) {
-    wrap.hidden = true;
+    outerWrap.hidden = true;
     return;
   }
-  wrap.hidden = false;
+  outerWrap.hidden = false;
   wrap.innerHTML = slides.map((url) => `<img src="${url}" alt="Mi Río Primero" />`).join("");
+  dotsWrap.innerHTML = slides.length > 1 ? slides.map((_, i) => `<span class="${i === 0 ? "is-active" : ""}"></span>`).join("") : "";
+
+  if (slides.length > 1) {
+    let indiceActual = 0;
+    setInterval(() => {
+      indiceActual = (indiceActual + 1) % slides.length;
+      wrap.scrollTo({ left: wrap.clientWidth * indiceActual, behavior: "smooth" });
+      dotsWrap.querySelectorAll("span").forEach((dot, i) => dot.classList.toggle("is-active", i === indiceActual));
+    }, 5000);
+
+    wrap.addEventListener("scroll", () => {
+      const indice = Math.round(wrap.scrollLeft / wrap.clientWidth);
+      dotsWrap.querySelectorAll("span").forEach((dot, i) => dot.classList.toggle("is-active", i === indice));
+    });
+  }
 }
 
 async function cargarNegociosLogos() {
