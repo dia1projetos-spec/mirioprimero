@@ -9,8 +9,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../css/app.css" />
   <style>
-    .tienda-slides { display:flex; gap:10px; overflow-x:auto; padding: 16px clamp(16px,4vw,40px); scroll-snap-type: x mandatory; }
-    .tienda-slides img { width: min(420px, 88vw); height: 220px; object-fit:cover; border-radius: var(--radius-lg); flex-shrink:0; scroll-snap-align: start; }
+    .tienda-slides { display:flex; overflow-x:auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
+    .tienda-slides::-webkit-scrollbar { display: none; }
+    .tienda-slides img { width: 100%; flex-shrink:0; scroll-snap-align: start; aspect-ratio: 16/7; object-fit:cover; display:block; }
+    @media (max-width: 640px) { .tienda-slides img { aspect-ratio: 4/3; } }
     .tienda-header { padding: 4px clamp(16px,4vw,40px) 8px; }
     .tienda-header h1 { font-family: var(--font-display); font-size: 34px; margin: 0 0 4px; }
     .tienda-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(200px,1fr)); gap:16px; padding: 8px clamp(16px,4vw,40px) 60px; }
