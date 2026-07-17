@@ -246,27 +246,39 @@ document.getElementById("buscarInput").addEventListener("input", (event) => {
 async function cargarPromociones() {
   const wrap = document.getElementById("promosSlider");
   wrap.innerHTML = "";
-  let snap;
+  let negociosSnap;
   try {
-    snap = await getDocs(collectionGroup(db, "productos"));
+    negociosSnap = await getDocs(collection(db, "negocios"));
   } catch (err) {
     console.error(err);
     wrap.innerHTML = `<p style="color:var(--text-muted); padding: 0 4px;">No pudimos cargar las promociones.</p>`;
     return;
   }
-  const promos = snap.docs.filter((d) => d.data().promocion?.activo && d.data().promocionAprobada);
+
+  const promos = [];
+  for (const negDoc of negociosSnap.docs) {
+    try {
+      const prodSnap = await getDocs(collection(db, "negocios", negDoc.id, "productos"));
+      prodSnap.forEach((prodDoc) => {
+        const p = prodDoc.data();
+        if (p.promocion?.activo && p.promocionAprobada) {
+          promos.push({ id: prodDoc.id, negocioId: negDoc.id, ...p });
+        }
+      });
+    } catch (err) {
+      console.error(`Error cargando productos de ${negDoc.id}:`, err);
+    }
+  }
 
   if (promos.length === 0) {
     wrap.innerHTML = `<p style="color:var(--text-muted); padding: 0 4px;">No hay promociones activas en este momento.</p>`;
     return;
   }
 
-  for (const docSnap of promos) {
-    const p = docSnap.data();
-    const negocioId = docSnap.ref.parent.parent.id;
+  for (const p of promos) {
     const a = document.createElement("a");
     a.className = "promo-slide";
-    a.href = `cliente/tienda.html?id=${negocioId}&producto=${docSnap.id}`;
+    a.href = `cliente/tienda.html?id=${p.negocioId}&producto=${p.id}`;
     a.innerHTML = `
       <img src="${p.fotoUrl || "https://placehold.co/400x260/0f1723/8b93a1?text=Sin+foto"}" alt="${escapeHtml(p.nombre)}" />
       <div class="promo-slide__info">
@@ -280,26 +292,31 @@ async function cargarPromociones() {
 
 async function cargarProductos() {
   const empty = document.getElementById("feedEmpty");
-  let snap;
+  let negociosSnap;
   try {
-    snap = await getDocs(collectionGroup(db, "productos"));
+    negociosSnap = await getDocs(collection(db, "negocios"));
   } catch (err) {
     console.error(err);
     empty.hidden = false;
     empty.querySelector("span").textContent = "No pudimos cargar los productos. Revisá la consola del navegador.";
     return;
   }
-  const negocioCache = new Map();
 
   todosLosProductos = [];
-  for (const docSnap of snap.docs) {
-    const negocioId = docSnap.ref.parent.parent.id;
-    if (!negocioCache.has(negocioId)) {
-      const negSnap = await getDoc(doc(db, "negocios", negocioId));
-      negocioCache.set(negocioId, negSnap.exists() ? negSnap.data() : null);
+  for (const negDoc of negociosSnap.docs) {
+    try {
+      const prodSnap = await getDocs(collection(db, "negocios", negDoc.id, "productos"));
+      prodSnap.forEach((prodDoc) => {
+        todosLosProductos.push({
+          id: prodDoc.id,
+          negocioId: negDoc.id,
+          negocio: negDoc.data(),
+          ...prodDoc.data(),
+        });
+      });
+    } catch (err) {
+      console.error(`Error cargando productos de ${negDoc.id}:`, err);
     }
-    const negocio = negocioCache.get(negocioId);
-    todosLosProductos.push({ id: docSnap.id, negocioId, negocio, ...docSnap.data() });
   }
 
   todosLosProductos.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));

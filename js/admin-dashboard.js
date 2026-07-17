@@ -373,10 +373,9 @@ async function cargarProductosParaCategorizar() {
   tbody.innerHTML = "";
   empty.hidden = true;
 
-  let productosSnap, categoriasSnap, negociosSnap;
+  let categoriasSnap, negociosSnap;
   try {
-    [productosSnap, categoriasSnap, negociosSnap] = await Promise.all([
-      getDocs(collectionGroup(db, "productos")),
+    [categoriasSnap, negociosSnap] = await Promise.all([
       getDocs(collection(db, "categorias")),
       getDocs(collection(db, "negocios")),
     ]);
@@ -384,28 +383,40 @@ async function cargarProductosParaCategorizar() {
     console.error(err);
     empty.hidden = false;
     empty.querySelector("span").textContent =
-      "No pudimos cargar los productos. Revisá la consola del navegador (F12) para más detalles.";
+      "No pudimos cargar los negocios. Revisá la consola del navegador (F12) para más detalles.";
     return;
   }
 
-  if (productosSnap.empty) {
+  const categorias = categoriasSnap.docs.map((d) => d.data().nombre);
+
+  // Buscamos los productos negocio por negocio (en vez de una consulta
+  // "collection group" entre todos) para evitar depender de ese tipo de
+  // consulta especial de Firestore.
+  const productosConNegocio = [];
+  for (const negDoc of negociosSnap.docs) {
+    try {
+      const prodSnap = await getDocs(collection(db, "negocios", negDoc.id, "productos"));
+      prodSnap.forEach((prodDoc) => {
+        productosConNegocio.push({
+          id: prodDoc.id,
+          negocioId: negDoc.id,
+          negocioNombre: negDoc.data().nombre || negDoc.id,
+          ...prodDoc.data(),
+        });
+      });
+    } catch (err) {
+      console.error(`Error cargando productos de ${negDoc.id}:`, err);
+    }
+  }
+
+  if (productosConNegocio.length === 0) {
     empty.hidden = false;
     return;
   }
 
-  const negociosMap = new Map();
-  negociosSnap.forEach((d) => negociosMap.set(d.id, d.data()));
-  const categorias = categoriasSnap.docs.map((d) => d.data().nombre);
+  productosConNegocio.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
 
-  const productosOrdenados = [...productosSnap.docs].sort(
-    (a, b) => (b.data().createdAt?.seconds || 0) - (a.data().createdAt?.seconds || 0)
-  );
-
-  productosOrdenados.forEach((docSnap) => {
-    const p = docSnap.data();
-    const negocioId = docSnap.ref.parent.parent.id;
-    const negocioNombre = negociosMap.get(negocioId)?.nombre || negocioId;
-
+  productosConNegocio.forEach((p) => {
     const tr = document.createElement("tr");
     const opciones = [`<option value="">Sin categoría</option>`]
       .concat(categorias.map((c) => `<option value="${escapeHtml(c)}" ${p.categoria === c ? "selected" : ""}>${escapeHtml(c)}</option>`))
@@ -414,13 +425,13 @@ async function cargarProductosParaCategorizar() {
     tr.innerHTML = `
       <td>${p.fotoUrl ? `<img src="${p.fotoUrl}" style="width:44px;height:44px;object-fit:cover;border-radius:8px;" />` : "—"}</td>
       <td>${escapeHtml(p.nombre)}</td>
-      <td>${escapeHtml(negocioNombre)}</td>
+      <td>${escapeHtml(p.negocioNombre)}</td>
       <td>
-        <select data-categorizar="${negocioId}|${docSnap.id}" style="background:var(--panel); color:var(--text); border:1px solid var(--line); border-radius:8px; padding:6px 10px;">
+        <select data-categorizar="${p.negocioId}|${p.id}" style="background:var(--panel); color:var(--text); border:1px solid var(--line); border-radius:8px; padding:6px 10px;">
           ${opciones}
         </select>
       </td>
-      <td><span class="form-success" data-guardado="${negocioId}|${docSnap.id}"></span></td>
+      <td><span class="form-success" data-guardado="${p.negocioId}|${p.id}"></span></td>
     `;
     tbody.appendChild(tr);
   });
