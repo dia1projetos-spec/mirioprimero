@@ -246,9 +246,14 @@ document.getElementById("buscarInput").addEventListener("input", (event) => {
 async function cargarPromociones() {
   const wrap = document.getElementById("promosSlider");
   wrap.innerHTML = "";
-  // NOTA: Firestore puede pedir crear un índice compuesto la primera vez
-  // (aparece un link en la consola del navegador para crearlo con un clic).
-  const snap = await getDocs(query(collectionGroup(db, "productos"), orderBy("createdAt", "desc")));
+  let snap;
+  try {
+    snap = await getDocs(collectionGroup(db, "productos"));
+  } catch (err) {
+    console.error(err);
+    wrap.innerHTML = `<p style="color:var(--text-muted); padding: 0 4px;">No pudimos cargar las promociones.</p>`;
+    return;
+  }
   const promos = snap.docs.filter((d) => d.data().promocion?.activo && d.data().promocionAprobada);
 
   if (promos.length === 0) {
@@ -274,7 +279,16 @@ async function cargarPromociones() {
 }
 
 async function cargarProductos() {
-  const snap = await getDocs(query(collectionGroup(db, "productos"), orderBy("createdAt", "desc")));
+  const empty = document.getElementById("feedEmpty");
+  let snap;
+  try {
+    snap = await getDocs(collectionGroup(db, "productos"));
+  } catch (err) {
+    console.error(err);
+    empty.hidden = false;
+    empty.querySelector("span").textContent = "No pudimos cargar los productos. Revisá la consola del navegador.";
+    return;
+  }
   const negocioCache = new Map();
 
   todosLosProductos = [];
@@ -288,6 +302,7 @@ async function cargarProductos() {
     todosLosProductos.push({ id: docSnap.id, negocioId, negocio, ...docSnap.data() });
   }
 
+  todosLosProductos.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
   renderProductos();
 }
 

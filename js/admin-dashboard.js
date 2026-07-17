@@ -371,24 +371,37 @@ async function cargarProductosParaCategorizar() {
   const tbody = document.getElementById("tablaProductosCategorizar");
   const empty = document.getElementById("productosCategorizarEmpty");
   tbody.innerHTML = "";
+  empty.hidden = true;
 
-  const [productosSnap, categoriasSnap, negociosSnap] = await Promise.all([
-    getDocs(query(collectionGroup(db, "productos"), orderBy("createdAt", "desc"))),
-    getDocs(collection(db, "categorias")),
-    getDocs(collection(db, "negocios")),
-  ]);
+  let productosSnap, categoriasSnap, negociosSnap;
+  try {
+    [productosSnap, categoriasSnap, negociosSnap] = await Promise.all([
+      getDocs(collectionGroup(db, "productos")),
+      getDocs(collection(db, "categorias")),
+      getDocs(collection(db, "negocios")),
+    ]);
+  } catch (err) {
+    console.error(err);
+    empty.hidden = false;
+    empty.querySelector("span").textContent =
+      "No pudimos cargar los productos. Revisá la consola del navegador (F12) para más detalles.";
+    return;
+  }
 
   if (productosSnap.empty) {
     empty.hidden = false;
     return;
   }
-  empty.hidden = true;
 
   const negociosMap = new Map();
   negociosSnap.forEach((d) => negociosMap.set(d.id, d.data()));
   const categorias = categoriasSnap.docs.map((d) => d.data().nombre);
 
-  productosSnap.forEach((docSnap) => {
+  const productosOrdenados = [...productosSnap.docs].sort(
+    (a, b) => (b.data().createdAt?.seconds || 0) - (a.data().createdAt?.seconds || 0)
+  );
+
+  productosOrdenados.forEach((docSnap) => {
     const p = docSnap.data();
     const negocioId = docSnap.ref.parent.parent.id;
     const negocioNombre = negociosMap.get(negocioId)?.nombre || negocioId;

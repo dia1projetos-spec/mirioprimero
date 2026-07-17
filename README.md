@@ -36,11 +36,11 @@ crear el primero:
    ```
 4. Entrá por `admin/login.html` con ese email y contraseña.
 
-### d) Índices de Firestore (aparecen solos)
-El feed usa `collectionGroup("productos")` con `orderBy("createdAt")`.
-La primera vez que se ejecute esa consulta, Firebase va a tirar un error en
-la consola del navegador con un link para crear el índice compuesto
-automáticamente. Solo hay que hacer clic en ese link una vez.
+### d) Índices de Firestore
+Ya no hacen falta índices manuales: las consultas que juntan productos de
+todos los negocios (`collectionGroup("productos")`) ordenan los resultados
+en el propio navegador en vez de pedirle el orden a Firestore, así que
+funcionan sin configuración extra desde el primer producto cargado.
 
 ## 2. Mapa de archivos
 
