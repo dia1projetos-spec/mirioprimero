@@ -11,6 +11,14 @@
 .search-bar input:focus { outline:none; }
 .search-bar input::placeholder { color: var(--text-muted); }
 
+.filtro-label { margin: 16px clamp(16px,4vw,40px) 0; font-size:12px; text-transform:uppercase; letter-spacing:0.06em; color: var(--text-muted); }
+.categorias-bar--producto .categoria-chip.is-active { background: linear-gradient(100deg, var(--river-blue), #4a95dd); color:#fff; }
+
+.novedades-slider { display:flex; gap:14px; overflow-x:auto; padding: 0 clamp(16px,4vw,40px) 8px; scroll-snap-type: x mandatory; }
+.novedad-card { flex-shrink:0; width: min(220px, 70vw); scroll-snap-align: start; border-radius: var(--radius-lg); overflow:hidden; background: var(--panel); border:1px solid var(--line); }
+.novedad-card video { width:100%; height:300px; object-fit:cover; display:block; background:#000; }
+.novedad-card__caption { padding: 10px 12px; font-size:13px; color: var(--text-muted); }
+
 .install-hero {
   display: flex;
   align-items: center;

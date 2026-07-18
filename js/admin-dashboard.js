@@ -296,8 +296,32 @@ async function cargarFeedVideos() {
     const v = docSnap.data();
     const div = document.createElement("div");
     div.style.cssText = "padding:12px 0; border-bottom:1px solid var(--line);";
-    div.innerHTML = `<video src="${v.url}" controls style="max-width:220px; border-radius:12px; display:block; margin-bottom:8px;"></video><p style="color:var(--text-muted); font-size:14px; margin:0;">${escapeHtml(v.caption || "")}</p>`;
+    div.innerHTML = `
+      <video src="${v.url}" controls style="max-width:220px; border-radius:12px; display:block; margin-bottom:8px;"></video>
+      <input type="text" data-caption="${docSnap.id}" value="${escapeHtml(v.caption || "")}" style="width:100%; max-width:320px; background:var(--panel); color:var(--text); border:1px solid var(--line); border-radius:8px; padding:8px 10px; margin-bottom:8px;" />
+      <div class="top-actions">
+        <button class="btn btn--gold btn--sm" data-guardar-caption="${docSnap.id}">Guardar texto</button>
+        <button class="btn btn--danger btn--sm" data-eliminar-video="${docSnap.id}">Eliminar</button>
+      </div>
+    `;
     wrap.appendChild(div);
+  });
+
+  wrap.querySelectorAll("[data-guardar-caption]").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const input = wrap.querySelector(`[data-caption="${btn.dataset.guardarCaption}"]`);
+      await updateDoc(doc(db, "feedAdmin", btn.dataset.guardarCaption), { caption: input.value.trim() });
+      btn.textContent = "Guardado ✔";
+      setTimeout(() => (btn.textContent = "Guardar texto"), 1500);
+    });
+  });
+
+  wrap.querySelectorAll("[data-eliminar-video]").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      if (!confirm("¿Eliminar esta publicación del feed?")) return;
+      await deleteDoc(doc(db, "feedAdmin", btn.dataset.eliminarVideo));
+      cargarFeedVideos();
+    });
   });
 }
 
@@ -373,12 +397,9 @@ async function cargarProductosParaCategorizar() {
   tbody.innerHTML = "";
   empty.hidden = true;
 
-  let categoriasSnap, negociosSnap;
+  let negociosSnap;
   try {
-    [categoriasSnap, negociosSnap] = await Promise.all([
-      getDocs(collection(db, "categorias")),
-      getDocs(collection(db, "negocios")),
-    ]);
+    negociosSnap = await getDocs(collection(db, "negocios"));
   } catch (err) {
     console.error(err);
     empty.hidden = false;
@@ -387,15 +408,18 @@ async function cargarProductosParaCategorizar() {
     return;
   }
 
-  const categorias = categoriasSnap.docs.map((d) => d.data().nombre);
-
-  // Buscamos los productos negocio por negocio (en vez de una consulta
-  // "collection group" entre todos) para evitar depender de ese tipo de
-  // consulta especial de Firestore.
+  // Buscamos, para cada negocio, sus productos Y sus categorías de producto
+  // propias (en vez de una consulta "collection group" entre todos).
   const productosConNegocio = [];
+  const categoriasPorNegocio = new Map(); // negocioId -> [nombre, ...]
+
   for (const negDoc of negociosSnap.docs) {
     try {
-      const prodSnap = await getDocs(collection(db, "negocios", negDoc.id, "productos"));
+      const [prodSnap, catSnap] = await Promise.all([
+        getDocs(collection(db, "negocios", negDoc.id, "productos")),
+        getDocs(collection(db, "negocios", negDoc.id, "categoriasProducto")),
+      ]);
+      categoriasPorNegocio.set(negDoc.id, catSnap.docs.map((d) => d.data().nombre));
       prodSnap.forEach((prodDoc) => {
         productosConNegocio.push({
           id: prodDoc.id,
@@ -405,7 +429,7 @@ async function cargarProductosParaCategorizar() {
         });
       });
     } catch (err) {
-      console.error(`Error cargando productos de ${negDoc.id}:`, err);
+      console.error(`Error cargando datos de ${negDoc.id}:`, err);
     }
   }
 
@@ -418,8 +442,14 @@ async function cargarProductosParaCategorizar() {
 
   productosConNegocio.forEach((p) => {
     const tr = document.createElement("tr");
+    const categoriasDeEseNegocio = categoriasPorNegocio.get(p.negocioId) || [];
     const opciones = [`<option value="">Sin categoría</option>`]
-      .concat(categorias.map((c) => `<option value="${escapeHtml(c)}" ${p.categoria === c ? "selected" : ""}>${escapeHtml(c)}</option>`))
+      .concat(
+        categoriasDeEseNegocio.map(
+          (c) => `<option value="${escapeHtml(c)}" ${p.categoriaProducto === c ? "selected" : ""}>${escapeHtml(c)}</option>`
+        )
+      )
+      .concat([`<option value="__nueva__">+ Crear nueva categoría...</option>`])
       .join("");
 
     tr.innerHTML = `
@@ -431,18 +461,53 @@ async function cargarProductosParaCategorizar() {
           ${opciones}
         </select>
       </td>
+      <td>
+        <input type="number" data-orden="${p.negocioId}|${p.id}" value="${p.orden ?? ""}" placeholder="—" style="width:70px; background:var(--panel); color:var(--text); border:1px solid var(--line); border-radius:8px; padding:6px 8px;" />
+      </td>
       <td><span class="form-success" data-guardado="${p.negocioId}|${p.id}"></span></td>
     `;
     tbody.appendChild(tr);
   });
 
+  function mostrarGuardado(negId, prodId) {
+    const msg = tbody.querySelector(`[data-guardado="${negId}|${prodId}"]`);
+    if (!msg) return;
+    msg.textContent = "Guardado ✔";
+    setTimeout(() => (msg.textContent = ""), 2000);
+  }
+
   tbody.querySelectorAll("[data-categorizar]").forEach((select) => {
     select.addEventListener("change", async () => {
       const [negId, prodId] = select.dataset.categorizar.split("|");
-      await updateDoc(doc(db, "negocios", negId, "productos", prodId), { categoria: select.value || null });
-      const msg = tbody.querySelector(`[data-guardado="${negId}|${prodId}"]`);
-      msg.textContent = "Guardado ✔";
-      setTimeout(() => (msg.textContent = ""), 2000);
+
+      if (select.value === "__nueva__") {
+        const nombreNueva = prompt("Nombre de la nueva categoría de producto:");
+        if (!nombreNueva || !nombreNueva.trim()) {
+          select.value = "";
+          return;
+        }
+        const nombreFinal = nombreNueva.trim();
+        await addDoc(collection(db, "negocios", negId, "categoriasProducto"), {
+          nombre: nombreFinal,
+          createdAt: serverTimestamp(),
+        });
+        await updateDoc(doc(db, "negocios", negId, "productos", prodId), { categoriaProducto: nombreFinal });
+        mostrarGuardado(negId, prodId);
+        cargarProductosParaCategorizar();
+        return;
+      }
+
+      await updateDoc(doc(db, "negocios", negId, "productos", prodId), { categoriaProducto: select.value || null });
+      mostrarGuardado(negId, prodId);
+    });
+  });
+
+  tbody.querySelectorAll("[data-orden]").forEach((input) => {
+    input.addEventListener("change", async () => {
+      const [negId, prodId] = input.dataset.orden.split("|");
+      const valor = input.value === "" ? null : Number(input.value);
+      await updateDoc(doc(db, "negocios", negId, "productos", prodId), { orden: valor });
+      mostrarGuardado(negId, prodId);
     });
   });
 }

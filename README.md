@@ -75,9 +75,13 @@ manifest.json + sw.js       PWA instalable
 - `users/{uid}` → `{ role: "cliente"|"negocio"|"admin", email }`
 - `clientes/{uid}` → `{ nombre, direccion, edad, contacto, fotoUrl }`
 - `negocios/{uid}` → `{ nombre, categoria, logoUrl, slides:[url...], deliveryPropio:{activo,precio}, deliveryHS:{activo} }`
-  - `negocios/{uid}/productos/{id}` → `{ nombre, precio, fotoUrl, categoria, stock:{activo,cantidad}, destacado, promocion:{activo,precioPromo}, promocionAprobada }`
+  (`categoria` acá es la **categoría de negocio**: Maxikiosko, Super, Farmacia, etc. — se elige de `categorias/` al cargar el negocio)
+  - `negocios/{uid}/productos/{id}` → `{ nombre, precio, fotoUrl, categoriaProducto, orden, stock:{activo,cantidad}, destacado, promocion:{activo,precioPromo}, promocionAprobada }`
+    - `categoriaProducto`: **categoría de producto**, propia de cada tienda (ej: Bebidas, Snacks). La crea el negocio desde su panel o el admin desde "Categorizar productos". No tiene relación con la categoría de negocio.
+    - `orden`: número opcional que el admin asigna en "Categorizar productos" para forzar el orden en el feed de la home (menor = aparece primero). Sin asignar, se ordena por más nuevo.
   - `negocios/{uid}/cupones/{id}` → `{ codigo, tipo:"porcentaje"|"monto", valor, activo }`
-- `categorias/{id}` → `{ nombre }`
+  - `negocios/{uid}/categoriasProducto/{id}` → `{ nombre }` (categorías de producto propias de esa tienda)
+- `categorias/{id}` → `{ nombre }` (categorías de **negocio**, no de producto)
 - `pedidos/{id}` → `{ clienteUid, negocioId, productos:[...], total, estado, deliveryTipo, cuponAplicado, motivoCancelacion }`
   - `pedidos/{id}/chat/{id}` → `{ de:"cliente"|"negocio"|"sistema", texto }`
 - `feedAdmin/{id}` → `{ tipo:"video", url, caption }`
@@ -92,10 +96,10 @@ Para entregarte el sistema completo en un solo paquete, tomé estas
 decisiones de alcance — son perfectamente funcionales, pero más simples que
 una versión "de lujo":
 
-- **Orden manual de productos en el feed**: hoy el feed ordena por más
-  nuevo primero (`createdAt desc`). No armé todavía la pantalla de
-  arrastrar-y-soltar para que vos definas el orden manualmente — se puede
-  sumar como un campo `posicion` + una lista ordenable en el admin.
+- **Orden manual de productos en el feed**: el admin puede escribir un número
+  en "Categorizar productos" (menor = aparece primero). Es un campo numérico,
+  no una pantalla de arrastrar-y-soltar — más simple de construir, pero
+  cumple la misma función.
 - **Control de stock**: se guarda el número, pero todavía no descuenta
   automáticamente stock al confirmarse una venta.
 - **Notificaciones push** (avisar al negocio/admin en tiempo real fuera de

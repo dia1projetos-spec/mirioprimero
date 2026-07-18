@@ -31,6 +31,7 @@ async function init() {
   const snap = await getDoc(doc(db, "negocios", negocioId));
   negocioData = snap.data();
   document.getElementById("nombreNegocioHeader").textContent = negocioData?.nombre || "Productos";
+  await cargarCategoriasProducto();
   cargarProductos();
   cargarDeliveryForm();
   mostrarLogoPreview();
@@ -45,6 +46,7 @@ document.querySelectorAll("[data-tab]").forEach((btn) => {
     document.querySelectorAll(".tab-section").forEach((s) => (s.hidden = s.id !== `tab-${btn.dataset.tab}`));
     if (btn.dataset.tab === "slides") { cargarSlides(); mostrarLogoPreview(); }
     if (btn.dataset.tab === "cupones") cargarCupones();
+    if (btn.dataset.tab === "categorias-producto") cargarCategoriasProducto();
   });
 });
 
@@ -74,6 +76,7 @@ formProducto.addEventListener("submit", async (event) => {
   const id = document.getElementById("productoId").value;
   const nombre = document.getElementById("prodNombre").value.trim();
   const precio = Number(document.getElementById("prodPrecio").value);
+  const categoriaProducto = document.getElementById("prodCategoria").value || null;
   const fotoFile = document.getElementById("prodFoto").files[0];
   const stockActivo = document.getElementById("prodStockActivo").checked;
   const stockCantidad = Number(document.getElementById("prodStockCantidad").value) || 0;
@@ -88,6 +91,7 @@ formProducto.addEventListener("submit", async (event) => {
     const data = {
       nombre,
       precio,
+      categoriaProducto,
       stock: { activo: stockActivo, cantidad: stockCantidad },
       promocion: { activo: promoActivo, precioPromo },
       updatedAt: serverTimestamp(),
@@ -147,6 +151,7 @@ async function cargarProductos() {
       <td>${p.fotoUrl ? `<img src="${p.fotoUrl}" style="width:44px;height:44px;object-fit:cover;border-radius:8px;" />` : "—"}</td>
       <td>${escapeHtml(p.nombre)}</td>
       <td>$${p.precio}</td>
+      <td>${p.categoriaProducto ? escapeHtml(p.categoriaProducto) : "—"}</td>
       <td>${p.stock?.activo ? p.stock.cantidad : "Sin control"}</td>
       <td><input type="checkbox" data-destacar="${docSnap.id}" ${p.destacado ? "checked" : ""} /></td>
       <td>${p.promocion?.activo ? (p.promocionAprobada ? "Promo ✅" : "Promo (pendiente)") : "—"}</td>
@@ -179,6 +184,7 @@ async function cargarProductos() {
       document.getElementById("productoId").value = btn.dataset.editar;
       document.getElementById("prodNombre").value = p.nombre;
       document.getElementById("prodPrecio").value = p.precio;
+      document.getElementById("prodCategoria").value = p.categoriaProducto || "";
       document.getElementById("prodStockActivo").checked = !!p.stock?.activo;
       document.getElementById("prodStockCantidad").value = p.stock?.cantidad || 0;
       document.getElementById("prodPromoActivo").checked = !!p.promocion?.activo;
@@ -196,6 +202,52 @@ async function cargarProductos() {
     });
   });
 }
+
+// ---------- CATEGORÍAS DE PRODUCTO (propias de la tienda) ----------
+async function cargarCategoriasProducto() {
+  const select = document.getElementById("prodCategoria");
+  const tbody = document.getElementById("tablaCategoriasProducto");
+  const snap = await getDocs(collection(db, "negocios", negocioId, "categoriasProducto"));
+
+  select.innerHTML = `<option value="">Sin categoría</option>`;
+  if (tbody) tbody.innerHTML = "";
+
+  snap.forEach((docSnap) => {
+    const c = docSnap.data();
+    const opt = document.createElement("option");
+    opt.value = c.nombre;
+    opt.textContent = c.nombre;
+    select.appendChild(opt);
+
+    if (tbody) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td>${escapeHtml(c.nombre)}</td><td><button class="btn btn--outline btn--sm" data-eliminar-cat-producto="${docSnap.id}">Eliminar</button></td>`;
+      tbody.appendChild(tr);
+    }
+  });
+
+  if (tbody) {
+    tbody.querySelectorAll("[data-eliminar-cat-producto]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        await deleteDoc(doc(db, "negocios", negocioId, "categoriasProducto", btn.dataset.eliminarCatProducto));
+        cargarCategoriasProducto();
+      });
+    });
+  }
+}
+
+document.getElementById("formCategoriaProducto").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const input = document.getElementById("nombreCategoriaProducto");
+  const nombre = input.value.trim();
+  if (!nombre) return;
+  await addDoc(collection(db, "negocios", negocioId, "categoriasProducto"), {
+    nombre,
+    createdAt: serverTimestamp(),
+  });
+  input.value = "";
+  cargarCategoriasProducto();
+});
 
 // ---------- LOGO ----------
 function mostrarLogoPreview() {

@@ -47,7 +47,18 @@ async function init() {
   }
   negocioData = negSnap.data();
   document.getElementById("tiendaNombre").textContent = negocioData.nombre;
-  document.getElementById("tiendaCategoria").textContent = negocioData.categoria || "";
+
+  const badge = document.getElementById("tiendaCategoria");
+  if (negocioData.categoria) {
+    badge.textContent = negocioData.categoria;
+    badge.hidden = false;
+  }
+
+  const logoWrap = document.getElementById("tiendaLogoWrap");
+  const inicial = (negocioData.nombre || "?").trim().charAt(0).toUpperCase();
+  logoWrap.innerHTML = negocioData.logoUrl
+    ? `<img class="tienda-header__logo" src="${negocioData.logoUrl}" alt="${escapeHtml(negocioData.nombre)}" />`
+    : `<span class="tienda-header__logo tienda-header__logo--placeholder">${inicial}</span>`;
 
   const slidesWrap = document.getElementById("tiendaSlides");
   (negocioData.slides || []).forEach((url) => {
@@ -59,28 +70,62 @@ async function init() {
   const hsSnap = await getDoc(doc(db, "config", "deliveryHS"));
   deliveryHSPrecio = hsSnap.exists() ? hsSnap.data().precio : 0;
 
-  const grid = document.getElementById("tiendaGrid");
+  const contenido = document.getElementById("tiendaContenido");
   const prodSnap = await getDocs(collection(db, "negocios", negocioId, "productos"));
-  prodSnap.forEach((docSnap) => {
-    const p = docSnap.data();
-    const card = document.createElement("div");
-    card.className = "prod-card";
-    const precioMostrar = p.promocion?.activo && p.promocionAprobada ? p.promocion.precioPromo : p.precio;
-    card.innerHTML = `
-      <img src="${p.fotoUrl || "https://placehold.co/400x300/0f1723/8b93a1?text=Sin+foto"}" alt="${escapeHtml(p.nombre)}" />
-      <div class="prod-card__body">
-        <p class="prod-card__nombre">${escapeHtml(p.nombre)}</p>
-        <p class="prod-card__precio">$${precioMostrar}</p>
-        <button class="btn btn--gold btn--sm btn--block" style="margin-top:10px;" data-comprar="${docSnap.id}">Comprar</button>
-      </div>
-    `;
-    grid.appendChild(card);
+  const productos = prodSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
 
-    card.querySelector("[data-comprar]").addEventListener("click", () => abrirModalCompra(docSnap.id, p, precioMostrar));
+  if (productos.length === 0) {
+    contenido.innerHTML = `<p class="empty-state" style="padding: 40px 16px;"><span>Esta tienda todavía no cargó productos.</span></p>`;
+    return;
+  }
+
+  // Agrupamos por categoría de producto propia de la tienda. Los que no
+  // tienen categoría van juntos al final, bajo "Otros productos".
+  const grupos = new Map();
+  productos.forEach((p) => {
+    const clave = p.categoriaProducto || "Otros productos";
+    if (!grupos.has(clave)) grupos.set(clave, []);
+    grupos.get(clave).push(p);
+  });
+
+  const clavesOrdenadas = [...grupos.keys()].sort((a, b) => {
+    if (a === "Otros productos") return 1;
+    if (b === "Otros productos") return -1;
+    return a.localeCompare(b);
+  });
+
+  clavesOrdenadas.forEach((clave) => {
+    const seccion = document.createElement("section");
+    seccion.className = "categoria-producto-seccion";
+    seccion.innerHTML = `<h2>${escapeHtml(clave)}</h2>`;
+
+    const grid = document.createElement("div");
+    grid.className = "tienda-grid";
+
+    grupos.get(clave).forEach((p) => {
+      const precioMostrar = p.promocion?.activo && p.promocionAprobada ? p.promocion.precioPromo : p.precio;
+      const card = document.createElement("div");
+      card.className = "prod-card";
+      card.innerHTML = `
+        <div class="prod-card__img-wrap">
+          <img src="${p.fotoUrl || "https://placehold.co/400x300/0f1723/8b93a1?text=Sin+foto"}" alt="${escapeHtml(p.nombre)}" />
+        </div>
+        <div class="prod-card__body">
+          <p class="prod-card__nombre">${escapeHtml(p.nombre)}</p>
+          <p class="prod-card__precio">$${precioMostrar}</p>
+          <button class="btn btn--gold btn--sm btn--block" style="margin-top:10px;" data-comprar="${p.id}">Comprar</button>
+        </div>
+      `;
+      grid.appendChild(card);
+      card.querySelector("[data-comprar]").addEventListener("click", () => abrirModalCompra(p.id, p, precioMostrar));
+    });
+
+    seccion.appendChild(grid);
+    contenido.appendChild(seccion);
   });
 
   if (productoDestacadoId) {
-    const el = grid.querySelector(`[data-comprar="${productoDestacadoId}"]`);
+    const el = contenido.querySelector(`[data-comprar="${productoDestacadoId}"]`);
     el?.scrollIntoView({ behavior: "smooth", block: "center" });
   }
 }

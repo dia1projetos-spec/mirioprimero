@@ -14,6 +14,7 @@
     <aside class="app-sidebar">
       <p class="app-sidebar__brand">MI NEGOCIO</p>
       <button class="app-sidebar__link is-active" data-tab="productos">Productos</button>
+      <button class="app-sidebar__link" data-tab="categorias-producto">Categorías de productos</button>
       <button class="app-sidebar__link" data-tab="slides">Slides de la tienda</button>
       <button class="app-sidebar__link" data-tab="cupones">Cupones</button>
       <button class="app-sidebar__link" data-tab="pedidos">Pedidos</button>
@@ -33,11 +34,37 @@
         <div class="panel">
           <div class="table-wrap">
             <table class="data-table">
-              <thead><tr><th>Foto</th><th>Nombre</th><th>Precio</th><th>Stock</th><th>Destacado</th><th>Promo/Cupón</th><th></th></tr></thead>
+              <thead><tr><th>Foto</th><th>Nombre</th><th>Precio</th><th>Categoría</th><th>Stock</th><th>Destacado</th><th>Promo/Cupón</th><th></th></tr></thead>
               <tbody id="tablaProductos"></tbody>
             </table>
           </div>
           <p class="empty-state" id="productosEmpty" hidden><span>Todavía no cargaste productos.</span></p>
+        </div>
+      </section>
+
+      <!-- CATEGORÍAS DE PRODUCTOS -->
+      <section id="tab-categorias-producto" class="tab-section" hidden>
+        <div class="app-header"><h1>Categorías de productos</h1></div>
+        <p style="color:var(--text-muted); font-size:13px; margin-top:-14px;">
+          Organizá tus productos en categorías propias de tu tienda (ej: Bebidas, Snacks, Limpieza).
+          Esto es distinto de la categoría de tu negocio (Maxikiosko, Super, etc).
+        </p>
+        <div class="panel">
+          <form id="formCategoriaProducto" class="form" style="max-width: 400px; flex-direction: row; align-items: flex-end; gap: 10px;">
+            <div class="field" style="flex:1;">
+              <label for="nombreCategoriaProducto">Nueva categoría</label>
+              <input id="nombreCategoriaProducto" type="text" placeholder="Ej: Bebidas" required />
+            </div>
+            <button type="submit" class="btn btn--gold btn--sm">Agregar</button>
+          </form>
+        </div>
+        <div class="panel">
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead><tr><th>Categoría</th><th></th></tr></thead>
+              <tbody id="tablaCategoriasProducto"></tbody>
+            </table>
+          </div>
         </div>
       </section>
 
@@ -137,6 +164,12 @@
         <div class="field">
           <label for="prodPrecio">Precio *</label>
           <input id="prodPrecio" type="number" min="0" step="1" required />
+        </div>
+        <div class="field">
+          <label for="prodCategoria">Categoría del producto</label>
+          <select id="prodCategoria">
+            <option value="">Sin categoría</option>
+          </select>
         </div>
         <div class="field">
           <label for="prodFoto">Foto</label>
