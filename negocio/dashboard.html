@@ -28,7 +28,13 @@
       <section id="tab-productos" class="tab-section">
         <div class="app-header">
           <h1 id="nombreNegocioHeader">Productos</h1>
-          <button class="btn btn--gold" id="btnNuevoProducto">+ Nuevo producto</button>
+          <div class="top-actions" style="align-items:center;">
+            <button type="button" class="tienda-estado-toggle" id="btnEstadoTienda">
+              <span class="tienda-estado-toggle__dot"></span>
+              <span id="tiendaEstadoTexto">Abierta</span>
+            </button>
+            <button class="btn btn--gold" id="btnNuevoProducto">+ Nuevo producto</button>
+          </div>
         </div>
         <p style="color:var(--text-muted); font-size:13px; margin-top:-14px;">Podés destacar hasta 3 productos por vez para que aparezcan en el feed.</p>
         <div class="panel">

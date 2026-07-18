@@ -11,6 +11,7 @@ import {
   doc,
   query,
   orderBy,
+  onSnapshot,
 } from "./firebase-config.js";
 
 // ---------- Service Worker (PWA) ----------
@@ -197,14 +198,22 @@ async function cargarNegociosLogos() {
 
   snap.forEach((docSnap) => {
     const n = docSnap.data();
+    const cerrado = n.abierto === false;
     const a = document.createElement("a");
-    a.className = "negocio-logo-card";
+    a.className = "negocio-logo-card" + (cerrado ? " negocio-logo-card--cerrado" : "");
     a.href = `cliente/tienda.html?id=${docSnap.id}`;
     const inicial = (n.nombre || "?").trim().charAt(0).toUpperCase();
-    a.innerHTML = n.logoUrl
+    const imgHtml = n.logoUrl
       ? `<img class="negocio-logo-card__img" src="${n.logoUrl}" alt="${escapeHtml(n.nombre)}" />`
       : `<span class="negocio-logo-card__img negocio-logo-card__img--placeholder">${inicial}</span>`;
-    a.innerHTML += `<span class="negocio-logo-card__nombre">${escapeHtml(n.nombre)}</span>`;
+    a.innerHTML = `
+      <span class="negocio-logo-card__imgwrap">
+        ${imgHtml}
+        <span class="negocio-logo-card__estado ${cerrado ? "is-cerrado" : "is-abierto"}"></span>
+      </span>
+      <span class="negocio-logo-card__nombre">${escapeHtml(n.nombre)}</span>
+      ${cerrado ? `<span class="negocio-logo-card__label">Cerrado</span>` : ""}
+    `;
     row.appendChild(a);
   });
 }
@@ -446,6 +455,79 @@ async function cargarNovedades() {
 function escapeHtml(str = "") {
   return String(str).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
+
+// ---------- Notificaciones (avisos publicados por el admin) ----------
+const NOTIF_STORAGE_KEY = "mrp_notif_vistas";
+
+function idsNotificacionesVistas() {
+  try {
+    return new Set(JSON.parse(localStorage.getItem(NOTIF_STORAGE_KEY) || "[]"));
+  } catch {
+    return new Set();
+  }
+}
+
+function marcarNotificacionesComoVistas(ids) {
+  localStorage.setItem(NOTIF_STORAGE_KEY, JSON.stringify([...ids]));
+}
+
+function mostrarToastNotificacion(n) {
+  const toast = document.createElement("div");
+  toast.className = "toast-notificacion";
+  toast.innerHTML = `<strong>📢 ${escapeHtml(n.titulo)}</strong>${escapeHtml(n.mensaje)}`;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 8000);
+}
+
+let notificacionesCache = [];
+let notificacionesPrimerCarga = true;
+
+onSnapshot(query(collection(db, "notificaciones"), orderBy("createdAt", "desc")), (snap) => {
+  notificacionesCache = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  const vistas = idsNotificacionesVistas();
+  const noLeidas = notificacionesCache.filter((n) => !vistas.has(n.id));
+
+  const badge = document.getElementById("notifBadge");
+  if (noLeidas.length > 0) {
+    badge.hidden = false;
+    badge.textContent = noLeidas.length > 9 ? "9+" : noLeidas.length;
+  } else {
+    badge.hidden = true;
+  }
+
+  if (!notificacionesPrimerCarga) {
+    snap.docChanges().forEach((change) => {
+      if (change.type === "added") mostrarToastNotificacion(change.doc.data());
+    });
+  }
+  notificacionesPrimerCarga = false;
+});
+
+const modalNotificaciones = document.getElementById("modalNotificaciones");
+document.getElementById("btnNotificaciones").addEventListener("click", () => {
+  const wrap = document.getElementById("listaNotificacionesCliente");
+  const empty = document.getElementById("notificacionesClienteEmpty");
+  wrap.innerHTML = "";
+
+  if (notificacionesCache.length === 0) {
+    empty.hidden = false;
+  } else {
+    empty.hidden = true;
+    notificacionesCache.forEach((n) => {
+      const div = document.createElement("div");
+      div.style.cssText = "padding:12px 0; border-bottom:1px solid var(--line);";
+      div.innerHTML = `<strong style="color:var(--gold-soft);">${escapeHtml(n.titulo)}</strong><p style="margin:4px 0 0; font-size:14px; color:var(--text);">${escapeHtml(n.mensaje)}</p>`;
+      wrap.appendChild(div);
+    });
+  }
+
+  marcarNotificacionesComoVistas(new Set(notificacionesCache.map((n) => n.id)));
+  document.getElementById("notifBadge").hidden = true;
+  modalNotificaciones.hidden = false;
+});
+document.getElementById("cerrarModalNotificaciones").addEventListener("click", () => {
+  modalNotificaciones.hidden = true;
+});
 
 cargarHeaderSlides();
 cargarNegociosLogos();

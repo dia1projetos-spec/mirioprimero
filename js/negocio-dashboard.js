@@ -31,12 +31,29 @@ async function init() {
   const snap = await getDoc(doc(db, "negocios", negocioId));
   negocioData = snap.data();
   document.getElementById("nombreNegocioHeader").textContent = negocioData?.nombre || "Productos";
+  mostrarEstadoTienda();
   await cargarCategoriasProducto();
   cargarProductos();
   cargarDeliveryForm();
   mostrarLogoPreview();
   escucharPedidos();
 }
+
+// ---------- Abierta / Cerrada ----------
+function mostrarEstadoTienda() {
+  const btn = document.getElementById("btnEstadoTienda");
+  const texto = document.getElementById("tiendaEstadoTexto");
+  const cerrada = negocioData?.abierto === false;
+  btn.classList.toggle("is-cerrada", cerrada);
+  texto.textContent = cerrada ? "Cerrada" : "Abierta";
+}
+
+document.getElementById("btnEstadoTienda").addEventListener("click", async () => {
+  const nuevoEstado = negocioData?.abierto === false; // si estaba cerrada, pasa a abierta
+  await updateDoc(doc(db, "negocios", negocioId), { abierto: nuevoEstado });
+  negocioData.abierto = nuevoEstado;
+  mostrarEstadoTienda();
+});
 
 // ---------- Navegación ----------
 document.querySelectorAll("[data-tab]").forEach((btn) => {
@@ -145,22 +162,26 @@ async function cargarProductos() {
   });
 
   snap.forEach((docSnap) => {
-    const p = docSnap.data();
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${p.fotoUrl ? `<img src="${p.fotoUrl}" style="width:44px;height:44px;object-fit:cover;border-radius:8px;" />` : "—"}</td>
-      <td>${escapeHtml(p.nombre)}</td>
-      <td>$${p.precio}</td>
-      <td>${p.categoriaProducto ? escapeHtml(p.categoriaProducto) : "—"}</td>
-      <td>${p.stock?.activo ? p.stock.cantidad : "Sin control"}</td>
-      <td><input type="checkbox" data-destacar="${docSnap.id}" ${p.destacado ? "checked" : ""} /></td>
-      <td>${p.promocion?.activo ? (p.promocionAprobada ? "Promo ✅" : "Promo (pendiente)") : "—"}</td>
-      <td>
-        <button class="btn btn--outline btn--sm" data-editar="${docSnap.id}">Editar</button>
-        <button class="btn btn--outline btn--sm" data-eliminar="${docSnap.id}">Eliminar</button>
-      </td>
-    `;
-    tbody.appendChild(tr);
+    try {
+      const p = docSnap.data();
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${p.fotoUrl ? `<img src="${p.fotoUrl}" style="width:44px;height:44px;object-fit:cover;border-radius:8px;" />` : "—"}</td>
+        <td>${escapeHtml(p.nombre)}</td>
+        <td>$${p.precio}</td>
+        <td>${p.categoriaProducto ? escapeHtml(p.categoriaProducto) : "—"}</td>
+        <td>${p.stock?.activo ? p.stock.cantidad : "Sin control"}</td>
+        <td><input type="checkbox" data-destacar="${docSnap.id}" ${p.destacado ? "checked" : ""} /></td>
+        <td>${p.promocion?.activo ? (p.promocionAprobada ? "Promo ✅" : "Promo (pendiente)") : "—"}</td>
+        <td>
+          <button class="btn btn--outline btn--sm" data-editar="${docSnap.id}">Editar</button>
+          <button class="btn btn--outline btn--sm" data-eliminar="${docSnap.id}">Eliminar</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    } catch (err) {
+      console.error(`No se pudo mostrar el producto ${docSnap.id}:`, err);
+    }
   });
 
   tbody.querySelectorAll("[data-destacar]").forEach((chk) => {

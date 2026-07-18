@@ -74,8 +74,8 @@ manifest.json + sw.js       PWA instalable
 
 - `users/{uid}` → `{ role: "cliente"|"negocio"|"admin", email }`
 - `clientes/{uid}` → `{ nombre, direccion, edad, contacto, fotoUrl }`
-- `negocios/{uid}` → `{ nombre, categoria, logoUrl, slides:[url...], deliveryPropio:{activo,precio}, deliveryHS:{activo} }`
-  (`categoria` acá es la **categoría de negocio**: Maxikiosko, Super, Farmacia, etc. — se elige de `categorias/` al cargar el negocio)
+- `negocios/{uid}` → `{ nombre, categoria, logoUrl, abierto, slides:[url...], deliveryPropio:{activo,precio}, deliveryHS:{activo} }`
+  (`categoria` acá es la **categoría de negocio**: Maxikiosko, Super, Farmacia, etc. — se elige de `categorias/` al cargar el negocio; `abierto` lo cambia el propio negocio desde su panel)
   - `negocios/{uid}/productos/{id}` → `{ nombre, precio, fotoUrl, categoriaProducto, orden, stock:{activo,cantidad}, destacado, promocion:{activo,precioPromo}, promocionAprobada }`
     - `categoriaProducto`: **categoría de producto**, propia de cada tienda (ej: Bebidas, Snacks). La crea el negocio desde su panel o el admin desde "Categorizar productos". No tiene relación con la categoría de negocio.
     - `orden`: número opcional que el admin asigna en "Categorizar productos" para forzar el orden en el feed de la home (menor = aparece primero). Sin asignar, se ordena por más nuevo.
@@ -89,6 +89,7 @@ manifest.json + sw.js       PWA instalable
 - `cancelacionesAdmin/{id}` → `{ pedidoId, negocioId, motivo }`
 - `config/deliveryHS` → `{ precio }`
 - `config/homeSlides` → `{ slides:[url...] }` (opcional — si está vacío, el slider no se muestra)
+- `notificaciones/{id}` → `{ titulo, mensaje }` (avisos que el admin publica; se muestran dentro de la app a quien la tenga abierta, no son notificaciones push del celular)
 
 ## 4. Qué quedó simplificado a propósito (y cómo seguir)
 
@@ -102,6 +103,16 @@ una versión "de lujo":
   cumple la misma función.
 - **Control de stock**: se guarda el número, pero todavía no descuenta
   automáticamente stock al confirmarse una venta.
+- **Notificaciones**: son avisos *dentro de la app* (aparecen si alguien tiene
+  la página abierta, con un cartel emergente y una campanita con las
+  anteriores). No son notificaciones push reales del celular con la app
+  cerrada — eso requiere un plan de Firebase pago (Blaze) + Cloud Functions
+  con un servidor que dispare el envío, algo que excede el alcance de este
+  proyecto (solo HTML/CSS/JS sin backend propio).
+- **Aviso de nuevo pedido para el admin**: funciona en tiempo real (cartel +
+  notificación del navegador) mientras tengas la pestaña de Mi Río Primero
+  abierta en algún dispositivo — no llega si cerraste el navegador del todo,
+  por la misma razón de arriba.
 - **Notificaciones push** (avisar al negocio/admin en tiempo real fuera de
   la app): no implementadas. Hoy la actualización es en tiempo real *dentro*
   de la app (Firestore `onSnapshot`), pero no hay notificación push al

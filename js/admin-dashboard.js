@@ -21,6 +21,7 @@ import {
   query,
   where,
   orderBy,
+  onSnapshot,
   serverTimestamp,
 } from "./firebase-config.js";
 import { requireRole } from "./auth-guard.js";
@@ -42,7 +43,9 @@ tabButtons.forEach((btn) => {
     if (btn.dataset.tab === "promociones") cargarPromociones();
     if (btn.dataset.tab === "delivery") cargarDeliveryHS();
     if (btn.dataset.tab === "productos") cargarProductosParaCategorizar();
+    if (btn.dataset.tab === "prioridad") cargarPrioridad();
     if (btn.dataset.tab === "header") cargarHeaderSlides();
+    if (btn.dataset.tab === "notificaciones") cargarNotificaciones();
   });
 });
 
@@ -441,32 +444,39 @@ async function cargarProductosParaCategorizar() {
   productosConNegocio.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
 
   productosConNegocio.forEach((p) => {
-    const tr = document.createElement("tr");
-    const categoriasDeEseNegocio = categoriasPorNegocio.get(p.negocioId) || [];
-    const opciones = [`<option value="">Sin categoría</option>`]
-      .concat(
-        categoriasDeEseNegocio.map(
-          (c) => `<option value="${escapeHtml(c)}" ${p.categoriaProducto === c ? "selected" : ""}>${escapeHtml(c)}</option>`
+    try {
+      const tr = document.createElement("tr");
+      const categoriasDeEseNegocio = categoriasPorNegocio.get(p.negocioId) || [];
+      const opciones = [`<option value="">Sin categoría</option>`]
+        .concat(
+          categoriasDeEseNegocio.map(
+            (c) => `<option value="${escapeHtml(c)}" ${p.categoriaProducto === c ? "selected" : ""}>${escapeHtml(c)}</option>`
+          )
         )
-      )
-      .concat([`<option value="__nueva__">+ Crear nueva categoría...</option>`])
-      .join("");
+        .concat([`<option value="__nueva__">+ Crear nueva categoría...</option>`])
+        .join("");
 
-    tr.innerHTML = `
-      <td>${p.fotoUrl ? `<img src="${p.fotoUrl}" style="width:44px;height:44px;object-fit:cover;border-radius:8px;" />` : "—"}</td>
-      <td>${escapeHtml(p.nombre)}</td>
-      <td>${escapeHtml(p.negocioNombre)}</td>
-      <td>
-        <select data-categorizar="${p.negocioId}|${p.id}" style="background:var(--panel); color:var(--text); border:1px solid var(--line); border-radius:8px; padding:6px 10px;">
-          ${opciones}
-        </select>
-      </td>
-      <td>
-        <input type="number" data-orden="${p.negocioId}|${p.id}" value="${p.orden ?? ""}" placeholder="—" style="width:70px; background:var(--panel); color:var(--text); border:1px solid var(--line); border-radius:8px; padding:6px 8px;" />
-      </td>
-      <td><span class="form-success" data-guardado="${p.negocioId}|${p.id}"></span></td>
-    `;
-    tbody.appendChild(tr);
+      tr.innerHTML = `
+        <td>${p.fotoUrl ? `<img src="${p.fotoUrl}" style="width:44px;height:44px;object-fit:cover;border-radius:8px;" />` : "—"}</td>
+        <td>${escapeHtml(p.nombre)}</td>
+        <td>${escapeHtml(p.negocioNombre)}</td>
+        <td>
+          <select data-categorizar="${p.negocioId}|${p.id}" style="background:var(--panel); color:var(--text); border:1px solid var(--line); border-radius:8px; padding:6px 10px;">
+            ${opciones}
+          </select>
+        </td>
+        <td>
+          <input type="number" data-orden="${p.negocioId}|${p.id}" value="${p.orden ?? ""}" placeholder="—" style="width:70px; background:var(--panel); color:var(--text); border:1px solid var(--line); border-radius:8px; padding:6px 8px;" />
+        </td>
+        <td>
+          <span class="form-success" data-guardado="${p.negocioId}|${p.id}"></span>
+          <button class="btn btn--danger btn--sm" data-eliminar-producto="${p.negocioId}|${p.id}">Eliminar</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    } catch (err) {
+      console.error(`No se pudo mostrar el producto ${p.id}:`, err);
+    }
   });
 
   function mostrarGuardado(negId, prodId) {
@@ -508,6 +518,15 @@ async function cargarProductosParaCategorizar() {
       const valor = input.value === "" ? null : Number(input.value);
       await updateDoc(doc(db, "negocios", negId, "productos", prodId), { orden: valor });
       mostrarGuardado(negId, prodId);
+    });
+  });
+
+  tbody.querySelectorAll("[data-eliminar-producto]").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      if (!confirm("¿Eliminar este producto? Esta acción no se puede deshacer.")) return;
+      const [negId, prodId] = btn.dataset.eliminarProducto.split("|");
+      await deleteDoc(doc(db, "negocios", negId, "productos", prodId));
+      cargarProductosParaCategorizar();
     });
   });
 }
@@ -568,6 +587,210 @@ document.getElementById("formHeaderSlide").addEventListener("submit", async (eve
 
 function escapeHtml(str = "") {
   return String(str).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+// ---------- PEDIDOS (tiempo real + aviso de nuevo pedido) ----------
+let pedidosAdminPrimerCarga = true;
+let pedidosAdminIdsVistos = new Set();
+
+if ("Notification" in window && Notification.permission === "default") {
+  Notification.requestPermission();
+}
+
+function mostrarToastNuevoPedido(p) {
+  const toast = document.createElement("div");
+  toast.className = "toast-nuevo-pedido";
+  toast.innerHTML = `
+    <strong>🛎️ Nuevo pedido</strong>
+    <p>${escapeHtml(p.clienteNombre || "Cliente")} en ${escapeHtml(p.negocioNombre || "")}</p>
+    <a href="../chat.html?pedidoId=${p.id}" target="_blank">Ver conversación →</a>
+  `;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 9000);
+
+  if ("Notification" in window && Notification.permission === "granted") {
+    try {
+      new Notification("Nuevo pedido en Mi Río Primero", {
+        body: `${p.clienteNombre || "Cliente"} en ${p.negocioNombre || ""}`,
+      });
+    } catch (err) {
+      console.warn("No se pudo mostrar la notificación del navegador:", err);
+    }
+  }
+}
+
+onSnapshot(collection(db, "pedidos"), (snap) => {
+  const wrap = document.getElementById("listaPedidosAdmin");
+  const empty = document.getElementById("pedidosAdminEmpty");
+
+  snap.docChanges().forEach((change) => {
+    if (change.type === "added") {
+      const p = { id: change.doc.id, ...change.doc.data() };
+      if (!pedidosAdminPrimerCarga && !pedidosAdminIdsVistos.has(p.id)) {
+        mostrarToastNuevoPedido(p);
+      }
+      pedidosAdminIdsVistos.add(p.id);
+    }
+  });
+  pedidosAdminPrimerCarga = false;
+
+  if (!wrap) return; // el DOM de esta sección todavía no existe en la primera carga
+
+  wrap.innerHTML = "";
+  if (snap.empty) {
+    empty.hidden = false;
+    return;
+  }
+  empty.hidden = true;
+
+  snap.docs
+    .sort((a, b) => (b.data().createdAt?.seconds || 0) - (a.data().createdAt?.seconds || 0))
+    .forEach((docSnap) => {
+      const p = docSnap.data();
+      const div = document.createElement("div");
+      div.style.cssText = "padding:14px 0; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap;";
+      div.innerHTML = `
+        <div>
+          <strong>${escapeHtml(p.clienteNombre || "Cliente")}</strong> → ${escapeHtml(p.negocioNombre || "")}
+          <span class="badge badge--${p.estado}">${p.estado}</span>
+          <p style="font-size:13px; color:var(--text-muted); margin:4px 0 0;">Total: $${p.total ?? "—"}</p>
+        </div>
+        <a class="btn btn--outline btn--sm" href="../chat.html?pedidoId=${docSnap.id}" target="_blank">Ver conversación</a>
+      `;
+      wrap.appendChild(div);
+    });
+});
+
+// ---------- NOTIFICACIONES (broadcast a todos los usuarios) ----------
+document.getElementById("formNotificacion").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const errorEl = document.getElementById("notifError");
+  errorEl.textContent = "";
+  const titulo = document.getElementById("notifTitulo").value.trim();
+  const mensaje = document.getElementById("notifMensaje").value.trim();
+  try {
+    await addDoc(collection(db, "notificaciones"), { titulo, mensaje, createdAt: serverTimestamp() });
+    document.getElementById("formNotificacion").reset();
+    cargarNotificaciones();
+  } catch (err) {
+    console.error(err);
+    errorEl.textContent = "No pudimos publicar la notificación.";
+  }
+});
+
+async function cargarNotificaciones() {
+  const wrap = document.getElementById("listaNotificaciones");
+  const empty = document.getElementById("notificacionesEmpty");
+  wrap.innerHTML = "";
+  const snap = await getDocs(query(collection(db, "notificaciones"), orderBy("createdAt", "desc")));
+
+  if (snap.empty) {
+    empty.hidden = false;
+    return;
+  }
+  empty.hidden = true;
+
+  snap.forEach((docSnap) => {
+    const n = docSnap.data();
+    const div = document.createElement("div");
+    div.style.cssText = "padding:14px 0; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; gap:16px;";
+    div.innerHTML = `
+      <div>
+        <strong>${escapeHtml(n.titulo)}</strong>
+        <p style="color:var(--text-muted); font-size:13px; margin:4px 0 0;">${escapeHtml(n.mensaje)}</p>
+      </div>
+      <button class="btn btn--danger btn--sm" data-eliminar-notif="${docSnap.id}">Eliminar</button>
+    `;
+    wrap.appendChild(div);
+  });
+
+  wrap.querySelectorAll("[data-eliminar-notif]").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      if (!confirm("¿Eliminar esta notificación?")) return;
+      await deleteDoc(doc(db, "notificaciones", btn.dataset.eliminarNotif));
+      cargarNotificaciones();
+    });
+  });
+}
+
+// ---------- PRIORIDAD EN EL FEED ----------
+let prioridadProductos = [];
+
+async function cargarPrioridad() {
+  const wrap = document.getElementById("listaPrioridad");
+  const empty = document.getElementById("prioridadEmpty");
+  wrap.innerHTML = "";
+
+  const negociosSnap = await getDocs(collection(db, "negocios"));
+  prioridadProductos = [];
+
+  for (const negDoc of negociosSnap.docs) {
+    const prodSnap = await getDocs(collection(db, "negocios", negDoc.id, "productos"));
+    prodSnap.forEach((prodDoc) => {
+      prioridadProductos.push({
+        id: prodDoc.id,
+        negocioId: negDoc.id,
+        negocioNombre: negDoc.data().nombre || negDoc.id,
+        ...prodDoc.data(),
+      });
+    });
+  }
+
+  if (prioridadProductos.length === 0) {
+    empty.hidden = false;
+    return;
+  }
+  empty.hidden = true;
+
+  prioridadProductos.sort((a, b) => {
+    const oa = a.orden ?? Infinity;
+    const ob = b.orden ?? Infinity;
+    if (oa !== ob) return oa - ob;
+    return (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0);
+  });
+
+  renderPrioridad();
+}
+
+function renderPrioridad() {
+  const wrap = document.getElementById("listaPrioridad");
+  wrap.innerHTML = "";
+
+  prioridadProductos.forEach((p, index) => {
+    const div = document.createElement("div");
+    div.style.cssText = "display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid var(--line);";
+    div.innerHTML = `
+      <span style="color:var(--text-muted); font-size:13px; width:20px;">${index + 1}</span>
+      ${p.fotoUrl ? `<img src="${p.fotoUrl}" style="width:40px;height:40px;object-fit:cover;border-radius:8px;" />` : `<span style="width:40px;height:40px;"></span>`}
+      <div style="flex:1;">
+        <strong>${escapeHtml(p.nombre)}</strong>
+        <p style="margin:0; font-size:12px; color:var(--text-muted);">${escapeHtml(p.negocioNombre)}</p>
+      </div>
+      <div class="top-actions">
+        <button class="btn btn--outline btn--sm" data-subir="${index}" ${index === 0 ? "disabled" : ""}>↑</button>
+        <button class="btn btn--outline btn--sm" data-bajar="${index}" ${index === prioridadProductos.length - 1 ? "disabled" : ""}>↓</button>
+      </div>
+    `;
+    wrap.appendChild(div);
+  });
+
+  wrap.querySelectorAll("[data-subir]").forEach((btn) => {
+    btn.addEventListener("click", () => moverPrioridad(Number(btn.dataset.subir), -1));
+  });
+  wrap.querySelectorAll("[data-bajar]").forEach((btn) => {
+    btn.addEventListener("click", () => moverPrioridad(Number(btn.dataset.bajar), 1));
+  });
+}
+
+async function moverPrioridad(index, direccion) {
+  const nuevoIndex = index + direccion;
+  if (nuevoIndex < 0 || nuevoIndex >= prioridadProductos.length) return;
+  [prioridadProductos[index], prioridadProductos[nuevoIndex]] = [prioridadProductos[nuevoIndex], prioridadProductos[index]];
+  renderPrioridad();
+
+  await Promise.all(
+    prioridadProductos.map((p, i) => updateDoc(doc(db, "negocios", p.negocioId, "productos", p.id), { orden: i }))
+  );
 }
 
 // Carga inicial

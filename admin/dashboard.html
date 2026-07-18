@@ -16,9 +16,12 @@
       <button class="app-sidebar__link is-active" data-tab="negocios">Negocios</button>
       <button class="app-sidebar__link" data-tab="categorias">Categorías</button>
       <button class="app-sidebar__link" data-tab="productos">Categorizar productos</button>
+      <button class="app-sidebar__link" data-tab="prioridad">Prioridad en el feed</button>
       <button class="app-sidebar__link" data-tab="clientes">Clientes</button>
       <button class="app-sidebar__link" data-tab="feed">Feed (videos)</button>
       <button class="app-sidebar__link" data-tab="promociones">Promociones pendientes</button>
+      <button class="app-sidebar__link" data-tab="pedidos">Pedidos</button>
+      <button class="app-sidebar__link" data-tab="notificaciones">Notificaciones</button>
       <button class="app-sidebar__link" data-tab="header">Header del sitio</button>
       <button class="app-sidebar__link" data-tab="delivery">Delivery HS</button>
       <div class="app-sidebar__spacer"></div>
@@ -87,6 +90,19 @@
         </div>
       </section>
 
+      <!-- ---------- PRIORIDAD EN EL FEED ---------- -->
+      <section id="tab-prioridad" class="tab-section" hidden>
+        <div class="app-header"><h1>Prioridad en el feed</h1></div>
+        <p style="color:var(--text-muted); font-size:13px; margin-top:-14px;">
+          Los de arriba aparecen primero en "Para vos" en la home. Usá las flechas para
+          moverlos — el orden se guarda solo.
+        </p>
+        <div class="panel">
+          <div id="listaPrioridad"></div>
+          <p class="empty-state" id="prioridadEmpty" hidden><span>Todavía no hay productos cargados.</span></p>
+        </div>
+      </section>
+
 
       <section id="tab-clientes" class="tab-section" hidden>
         <div class="app-header"><h1>Clientes</h1></div>
@@ -128,6 +144,46 @@
         <div class="panel">
           <div id="listaPromociones"></div>
           <p class="empty-state" id="promocionesEmpty" hidden><span>No hay promociones esperando aprobación.</span></p>
+        </div>
+      </section>
+
+      <!-- ---------- PEDIDOS (TODOS LOS NEGOCIOS) ---------- -->
+      <section id="tab-pedidos" class="tab-section" hidden>
+        <div class="app-header"><h1>Pedidos</h1></div>
+        <p style="color:var(--text-muted); font-size:13px; margin-top:-14px;">
+          Todos los pedidos de todos los negocios, en tiempo real. Vas a recibir un aviso
+          cada vez que entre uno nuevo mientras tengas esta pantalla abierta.
+        </p>
+        <div class="panel">
+          <div id="listaPedidosAdmin"></div>
+          <p class="empty-state" id="pedidosAdminEmpty" hidden><span>Todavía no hay pedidos.</span></p>
+        </div>
+      </section>
+
+      <!-- ---------- NOTIFICACIONES (BROADCAST) ---------- -->
+      <section id="tab-notificaciones" class="tab-section" hidden>
+        <div class="app-header"><h1>Notificaciones</h1></div>
+        <p style="color:var(--text-muted); font-size:13px; margin-top:-14px;">
+          Se muestran a todas las personas que abran la app (como aviso en la home).
+          No son notificaciones push del celular con la app cerrada — son avisos dentro de la app.
+        </p>
+        <div class="panel">
+          <form id="formNotificacion" class="form">
+            <div class="field">
+              <label for="notifTitulo">Título *</label>
+              <input id="notifTitulo" required placeholder="Ej: ¡Nueva promo esta semana!" />
+            </div>
+            <div class="field">
+              <label for="notifMensaje">Mensaje *</label>
+              <textarea id="notifMensaje" rows="3" required></textarea>
+            </div>
+            <p id="notifError" class="form-error"></p>
+            <button type="submit" class="btn btn--gold">Publicar notificación</button>
+          </form>
+        </div>
+        <div class="panel">
+          <div id="listaNotificaciones"></div>
+          <p class="empty-state" id="notificacionesEmpty" hidden><span>Todavía no publicaste ninguna notificación.</span></p>
         </div>
       </section>
 

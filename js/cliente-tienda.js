@@ -54,6 +54,14 @@ async function init() {
     badge.hidden = false;
   }
 
+  if (negocioData.abierto === false) {
+    const estadoBadge = document.createElement("span");
+    estadoBadge.className = "tienda-header__badge";
+    estadoBadge.style.cssText = "background: rgba(107,114,128,0.2); color:#9ca3af; margin-left:8px;";
+    estadoBadge.textContent = "Cerrado ahora";
+    badge.after(estadoBadge);
+  }
+
   const logoWrap = document.getElementById("tiendaLogoWrap");
   const inicial = (negocioData.nombre || "?").trim().charAt(0).toUpperCase();
   logoWrap.innerHTML = negocioData.logoUrl
@@ -131,6 +139,10 @@ async function init() {
 }
 
 function abrirModalCompra(productoId, producto, precio) {
+  if (negocioData.abierto === false) {
+    alert("Este negocio está cerrado en este momento. Probá más tarde.");
+    return;
+  }
   if (!clienteUid) {
     alert("Necesitás iniciar sesión como cliente para comprar. Te llevamos a la página principal para ingresar o crear tu cuenta.");
     window.location.href = "../index.html";

@@ -35,21 +35,37 @@
       <img src="assets/logo-nav.png" alt="Mi Río Primero" class="home-topbar__logo" />
     </div>
 
-    <nav class="home-topbar__nav" id="navLoggedOut">
-      <button class="btn btn--outline btn--sm" id="btnAbrirLogin">Ingresar</button>
-      <button class="btn btn--gold btn--sm" id="btnAbrirRegistro">Crear cuenta</button>
-    </nav>
+    <div class="home-topbar__right">
+      <button class="notif-bell" id="btnNotificaciones" aria-label="Notificaciones">
+        🔔<span class="notif-bell__badge" id="notifBadge" hidden></span>
+      </button>
 
-    <nav class="home-topbar__nav" id="navCliente" hidden>
-      <a href="cliente/perfil.html" class="btn btn--outline btn--sm">Mi perfil</a>
-      <button class="btn btn--gold btn--sm" id="logoutClienteBtn">Salir</button>
-    </nav>
+      <nav class="home-topbar__nav" id="navLoggedOut">
+        <button class="btn btn--outline btn--sm" id="btnAbrirLogin">Ingresar</button>
+        <button class="btn btn--gold btn--sm" id="btnAbrirRegistro">Crear cuenta</button>
+      </nav>
 
-    <nav class="home-topbar__nav" id="navNegocio" hidden>
-      <a href="negocio/dashboard.html" class="btn btn--gold btn--sm">Ir a mi panel</a>
-      <button class="btn btn--outline btn--sm" id="logoutNegocioBtn">Salir</button>
-    </nav>
+      <nav class="home-topbar__nav" id="navCliente" hidden>
+        <a href="cliente/perfil.html" class="btn btn--outline btn--sm">Mi perfil</a>
+        <button class="btn btn--gold btn--sm" id="logoutClienteBtn">Salir</button>
+      </nav>
+
+      <nav class="home-topbar__nav" id="navNegocio" hidden>
+        <a href="negocio/dashboard.html" class="btn btn--gold btn--sm">Ir a mi panel</a>
+        <button class="btn btn--outline btn--sm" id="logoutNegocioBtn">Salir</button>
+      </nav>
+    </div>
   </header>
+
+  <!-- Modal: panel de notificaciones -->
+  <div class="modal-backdrop" id="modalNotificaciones" hidden>
+    <div class="modal">
+      <h2>Notificaciones</h2>
+      <div id="listaNotificacionesCliente" style="max-height: 50vh; overflow-y:auto;"></div>
+      <p class="empty-state" id="notificacionesClienteEmpty" hidden><span>Todavía no hay notificaciones.</span></p>
+      <button type="button" class="btn btn--outline btn--block" id="cerrarModalNotificaciones" style="margin-top:16px;">Cerrar</button>
+    </div>
+  </div>
 
   <div class="header-slides-wrap" id="headerSlidesWrap" hidden>
     <div class="header-slides" id="headerSlides"></div>
