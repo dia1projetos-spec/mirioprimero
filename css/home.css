@@ -146,6 +146,14 @@
 .promo-slide__precio { color: var(--gold-soft); font-weight:700; }
 
 .productos-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(180px,1fr)); gap:16px; padding: 0 clamp(16px,4vw,40px) 60px; }
+@media (max-width: 640px) {
+  .productos-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .producto-card img { height: 90px; }
+  .producto-card__info { padding: 8px 8px; }
+  .producto-card__nombre { font-size: 12px; }
+  .producto-card__negocio { font-size: 10px; }
+  .producto-card__precio { font-size: 12px; }
+}
 .producto-card { background: var(--panel); border:1px solid var(--line); border-radius: var(--radius-md); overflow:hidden; text-decoration:none; color: var(--text); display:flex; flex-direction:column; cursor: pointer; border-style: solid; }
 .producto-card img { width:100%; height:130px; object-fit:cover; }
 .producto-card__info { padding: 12px 14px; }

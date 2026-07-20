@@ -44,9 +44,14 @@
       font-family: var(--font-display); font-size: 22px; margin: 0 0 14px;
       color: var(--text-muted); letter-spacing: 0.02em;
     }
-    .tienda-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(200px,1fr)); gap:16px; }
+    .tienda-grid {
+      display:flex; gap:14px; overflow-x:auto; padding-bottom: 8px;
+      scroll-snap-type: x mandatory; scrollbar-width: none;
+    }
+    .tienda-grid::-webkit-scrollbar { display: none; }
     .tienda-grid:last-of-type { padding-bottom: 60px; }
     .prod-card {
+      flex-shrink: 0; width: min(170px, 40vw); scroll-snap-align: start;
       background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius-md);
       overflow:hidden; transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
     }

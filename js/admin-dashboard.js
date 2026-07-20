@@ -648,17 +648,27 @@ onSnapshot(collection(db, "pedidos"), (snap) => {
     .forEach((docSnap) => {
       const p = docSnap.data();
       const div = document.createElement("div");
-      div.style.cssText = "padding:14px 0; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap;";
+      div.style.cssText = "padding:14px 0; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap; align-items:center;";
       div.innerHTML = `
         <div>
           <strong>${escapeHtml(p.clienteNombre || "Cliente")}</strong> → ${escapeHtml(p.negocioNombre || "")}
           <span class="badge badge--${p.estado}">${p.estado}</span>
           <p style="font-size:13px; color:var(--text-muted); margin:4px 0 0;">Total: $${p.total ?? "—"}</p>
         </div>
-        <a class="btn btn--outline btn--sm" href="../chat.html?pedidoId=${docSnap.id}" target="_blank">Ver conversación</a>
+        <div class="top-actions" style="align-items:center;">
+          <a class="btn btn--outline btn--sm" href="../chat.html?pedidoId=${docSnap.id}" target="_blank">Ver conversación</a>
+          <button class="btn btn--danger btn--sm" data-eliminar-pedido="${docSnap.id}" title="Eliminar pedido" aria-label="Eliminar pedido">✕</button>
+        </div>
       `;
       wrap.appendChild(div);
     });
+
+  wrap.querySelectorAll("[data-eliminar-pedido]").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      if (!confirm("¿Eliminar este pedido? Esta acción no se puede deshacer.")) return;
+      await deleteDoc(doc(db, "pedidos", btn.dataset.eliminarPedido));
+    });
+  });
 });
 
 // ---------- NOTIFICACIONES (broadcast a todos los usuarios) ----------

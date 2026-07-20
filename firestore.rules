@@ -71,6 +71,7 @@ service cloud.firestore {
         resource.data.negocioId == request.auth.uid ||
         isAdmin()
       );
+      allow delete: if isAdmin();
 
       match /chat/{mensajeId} {
         allow read, create: if isSignedIn() && (

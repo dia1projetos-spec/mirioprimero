@@ -32,11 +32,20 @@ async function init() {
   negocioData = snap.data();
   document.getElementById("nombreNegocioHeader").textContent = negocioData?.nombre || "Productos";
   mostrarEstadoTienda();
-  await cargarCategoriasProducto();
-  cargarProductos();
-  cargarDeliveryForm();
-  mostrarLogoPreview();
-  escucharPedidos();
+
+  // Cada carga es independiente: si una falla (por ejemplo por permisos),
+  // las demás igual se ejecutan en vez de quedar todo el panel colgado.
+  await Promise.allSettled([
+    cargarCategoriasProducto(),
+    cargarProductos(),
+    Promise.resolve(cargarDeliveryForm()),
+    Promise.resolve(mostrarLogoPreview()),
+    Promise.resolve(escucharPedidos()),
+  ]).then((resultados) => {
+    resultados.forEach((r) => {
+      if (r.status === "rejected") console.error("Error cargando el panel:", r.reason);
+    });
+  });
 }
 
 // ---------- Abierta / Cerrada ----------
@@ -149,7 +158,17 @@ async function cargarProductos() {
   const tbody = document.getElementById("tablaProductos");
   const empty = document.getElementById("productosEmpty");
   tbody.innerHTML = "";
-  const snap = await getDocs(collection(db, "negocios", negocioId, "productos"));
+
+  let snap;
+  try {
+    snap = await getDocs(collection(db, "negocios", negocioId, "productos"));
+  } catch (err) {
+    console.error(err);
+    empty.hidden = false;
+    empty.querySelector("span").textContent = "No pudimos cargar tus productos. Revisá la consola (F12).";
+    return;
+  }
+
   if (snap.empty) {
     empty.hidden = false;
     return;
@@ -228,10 +247,19 @@ async function cargarProductos() {
 async function cargarCategoriasProducto() {
   const select = document.getElementById("prodCategoria");
   const tbody = document.getElementById("tablaCategoriasProducto");
-  const snap = await getDocs(collection(db, "negocios", negocioId, "categoriasProducto"));
-
   select.innerHTML = `<option value="">Sin categoría</option>`;
   if (tbody) tbody.innerHTML = "";
+
+  let snap;
+  try {
+    snap = await getDocs(collection(db, "negocios", negocioId, "categoriasProducto"));
+  } catch (err) {
+    console.error(err);
+    if (tbody) {
+      tbody.innerHTML = `<tr><td colspan="2" style="color:var(--danger);">No pudimos cargar las categorías. Revisá la consola (F12) — puede ser que falten publicar las reglas de Firestore.</td></tr>`;
+    }
+    return;
+  }
 
   snap.forEach((docSnap) => {
     const c = docSnap.data();
@@ -262,12 +290,17 @@ document.getElementById("formCategoriaProducto").addEventListener("submit", asyn
   const input = document.getElementById("nombreCategoriaProducto");
   const nombre = input.value.trim();
   if (!nombre) return;
-  await addDoc(collection(db, "negocios", negocioId, "categoriasProducto"), {
-    nombre,
-    createdAt: serverTimestamp(),
-  });
-  input.value = "";
-  cargarCategoriasProducto();
+  try {
+    await addDoc(collection(db, "negocios", negocioId, "categoriasProducto"), {
+      nombre,
+      createdAt: serverTimestamp(),
+    });
+    input.value = "";
+    cargarCategoriasProducto();
+  } catch (err) {
+    console.error(err);
+    alert("No pudimos crear la categoría. Puede que falte publicar una actualización de las reglas de Firestore — revisá la consola (F12).");
+  }
 });
 
 // ---------- LOGO ----------
