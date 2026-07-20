@@ -111,6 +111,10 @@
   position: relative; background: none; border: none; cursor: pointer;
   font-size: 20px; line-height: 1; padding: 6px;
 }
+.topbar-carrito-btn {
+  position: relative; background: none; border: none; cursor: pointer;
+  font-size: 20px; line-height: 1; padding: 6px;
+}
 .notif-bell__badge {
   position: absolute; top: 0; right: 0;
   background: var(--danger); color: #fff; font-size: 10px; font-weight: 700;

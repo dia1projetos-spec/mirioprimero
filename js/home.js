@@ -13,6 +13,7 @@ import {
   orderBy,
   onSnapshot,
 } from "./firebase-config.js";
+import { initCarrito, agregarAlCarrito } from "./carrito.js";
 
 // ---------- Service Worker (PWA) ----------
 if ("serviceWorker" in navigator) {
@@ -405,18 +406,32 @@ function renderProductos() {
   empty.hidden = true;
 
   items.forEach((p) => {
-    const a = document.createElement("a");
-    a.className = "producto-card";
-    a.href = `cliente/tienda.html?id=${p.negocioId}&producto=${p.id}`;
-    a.innerHTML = `
-      <img src="${p.fotoUrl || "https://placehold.co/400x300/0f1723/8b93a1?text=Sin+foto"}" alt="${escapeHtml(p.nombre)}" />
-      <div class="producto-card__info">
-        <p class="producto-card__nombre">${escapeHtml(p.nombre)}</p>
-        <p class="producto-card__negocio">${escapeHtml(p.negocio?.nombre || "")}</p>
-        <span class="producto-card__precio">$${p.precio}</span>
+    const precioMostrar = p.promocion?.activo && p.promocionAprobada ? p.promocion.precioPromo : p.precio;
+    const card = document.createElement("div");
+    card.className = "producto-card";
+    card.innerHTML = `
+      <a href="cliente/tienda.html?id=${p.negocioId}&producto=${p.id}" style="text-decoration:none; color:inherit;">
+        <img src="${p.fotoUrl || "https://placehold.co/400x300/0f1723/8b93a1?text=Sin+foto"}" alt="${escapeHtml(p.nombre)}" />
+        <div class="producto-card__info">
+          <p class="producto-card__nombre">${escapeHtml(p.nombre)}</p>
+          <p class="producto-card__negocio">${escapeHtml(p.negocio?.nombre || "")}</p>
+          <span class="producto-card__precio">$${precioMostrar}</span>
+        </div>
+      </a>
+      <div class="producto-card__acciones">
+        <button class="btn btn--gold btn--sm" data-agregar-feed="${p.id}">+ Carrito</button>
+        <a class="btn btn--outline btn--sm" href="cliente/tienda.html?id=${p.negocioId}">Visitar tienda</a>
       </div>
     `;
-    grid.appendChild(a);
+    card.querySelector("[data-agregar-feed]").addEventListener("click", () =>
+      agregarAlCarrito(
+        p.negocioId,
+        p.negocio?.nombre || "",
+        { productoId: p.id, nombre: p.nombre, precio: precioMostrar, fotoUrl: p.fotoUrl || null },
+        { cerrado: p.negocio?.abierto === false }
+      )
+    );
+    grid.appendChild(card);
   });
 }
 
@@ -535,3 +550,4 @@ cargarNovedades();
 cargarCategoriasNegocio();
 cargarPromociones();
 cargarProductos();
+initCarrito();

@@ -84,16 +84,30 @@ function mostrarConfirmacionAgregado(nombre) {
 }
 
 function actualizarBadge() {
-  const btn = document.getElementById("carritoGlobalFab");
-  if (!btn) return;
   const total = contarItems();
-  const badge = document.getElementById("carritoGlobalBadge");
-  if (total === 0) {
-    btn.hidden = true;
-    return;
+
+  const fab = document.getElementById("carritoGlobalFab");
+  if (fab) {
+    fab.hidden = false; // el botón flotante siempre está visible, aunque el carrito esté vacío
+    const badgeFab = document.getElementById("carritoGlobalBadge");
+    if (total > 0) {
+      badgeFab.hidden = false;
+      badgeFab.textContent = total > 99 ? "99+" : total;
+    } else {
+      badgeFab.hidden = true;
+    }
   }
-  btn.hidden = false;
-  badge.textContent = total > 99 ? "99+" : total;
+
+  const topbarBtn = document.getElementById("topbarCarritoBtn");
+  if (topbarBtn) {
+    const badgeTop = document.getElementById("topbarCarritoBadge");
+    if (total > 0) {
+      badgeTop.hidden = false;
+      badgeTop.textContent = total > 99 ? "99+" : total;
+    } else {
+      badgeTop.hidden = true;
+    }
+  }
 }
 
 // ---------- Inyección del DOM (botón flotante + modales) ----------
@@ -143,6 +157,14 @@ function inyectarDOM() {
     renderGrupos();
     document.getElementById("carritoGlobalModalCarrito").hidden = false;
   });
+
+  const topbarBtn = document.getElementById("topbarCarritoBtn");
+  if (topbarBtn) {
+    topbarBtn.addEventListener("click", () => {
+      renderGrupos();
+      document.getElementById("carritoGlobalModalCarrito").hidden = false;
+    });
+  }
   document.getElementById("carritoGlobalCerrar").addEventListener("click", () => {
     document.getElementById("carritoGlobalModalCarrito").hidden = true;
   });
