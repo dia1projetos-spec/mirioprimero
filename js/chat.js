@@ -4,6 +4,8 @@ import {
   onAuthStateChanged,
   doc,
   getDoc,
+  updateDoc,
+  increment,
   collection,
   addDoc,
   query,
@@ -59,6 +61,10 @@ if (!pedidoId) {
     chatTitulo.textContent = miRol === "cliente" ? pedido.negocioNombre : pedido.clienteNombre;
     chatMeta.textContent = `Pedido · Total $${pedido.total ?? "—"} · Estado: ${pedido.estado}`;
 
+    if (miRol === "negocio" && pedido.negocioNoLeidos) {
+      updateDoc(doc(db, "pedidos", pedidoId), { negocioNoLeidos: 0 }).catch((err) => console.error(err));
+    }
+
     escucharMensajes();
   });
 }
@@ -94,4 +100,10 @@ chatForm.addEventListener("submit", async (event) => {
     texto,
     createdAt: serverTimestamp(),
   });
+
+  if (miRol === "cliente") {
+    await updateDoc(doc(db, "pedidos", pedidoId), { negocioNoLeidos: increment(1) });
+  } else if (miRol === "negocio") {
+    await updateDoc(doc(db, "pedidos", pedidoId), { negocioNoLeidos: 0 });
+  }
 });

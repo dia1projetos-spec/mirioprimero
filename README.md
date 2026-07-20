@@ -82,7 +82,8 @@ manifest.json + sw.js       PWA instalable
   - `negocios/{uid}/cupones/{id}` → `{ codigo, tipo:"porcentaje"|"monto", valor, activo }`
   - `negocios/{uid}/categoriasProducto/{id}` → `{ nombre }` (categorías de producto propias de esa tienda)
 - `categorias/{id}` → `{ nombre }` (categorías de **negocio**, no de producto)
-- `pedidos/{id}` → `{ clienteUid, negocioId, productos:[...], total, estado, deliveryTipo, cuponAplicado, motivoCancelacion }`
+- `pedidos/{id}` → `{ clienteUid, negocioId, productos:[{productoId,nombre,precio,cantidad}...], total, estado, deliveryTipo, cuponAplicado, motivoCancelacion, negocioNoLeidos }`
+  - `negocioNoLeidos`: cuántos mensajes del cliente el negocio todavía no vio. Se resetea a 0 cuando el negocio abre ese chat.
   - `pedidos/{id}/chat/{id}` → `{ de:"cliente"|"negocio"|"sistema", texto }`
 - `feedAdmin/{id}` → `{ tipo:"video", url, caption }`
 - `promocionesPendientes/{id}` → `{ negocioId, productoId, estado:"pendiente"|"aprobada"|"rechazada" }`
@@ -113,6 +114,15 @@ una versión "de lujo":
   notificación del navegador) mientras tengas la pestaña de Mi Río Primero
   abierta en algún dispositivo — no llega si cerraste el navegador del todo,
   por la misma razón de arriba.
+- **Carrito de compras**: el cliente agrega productos al carrito de una
+  tienda y confirma todo junto (con un solo delivery/cupón para todo el
+  pedido). El carrito se guarda en el navegador (localStorage), separado
+  por tienda — si cierra la página antes de confirmar, lo recupera al
+  volver a esa misma tienda.
+- **Aviso de nuevo mensaje para el negocio**: igual que con los pedidos,
+  funciona en tiempo real (cartel + notificación del navegador + contador
+  de mensajes sin responder junto al botón "Abrir chat") mientras el
+  negocio tenga el panel abierto.
 - **Notificaciones push** (avisar al negocio/admin en tiempo real fuera de
   la app): no implementadas. Hoy la actualización es en tiempo real *dentro*
   de la app (Firestore `onSnapshot`), pero no hay notificación push al

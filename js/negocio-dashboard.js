@@ -438,11 +438,55 @@ async function cargarCupones() {
 }
 
 // ---------- PEDIDOS ----------
+let negocioPedidosNoLeidosAnterior = new Map();
+let negocioPedidosPrimerCarga = true;
+
+if ("Notification" in window && Notification.permission === "default") {
+  Notification.requestPermission();
+}
+
+function mostrarToastNuevoMensaje(p, pedidoId) {
+  const toast = document.createElement("div");
+  toast.className = "toast-nuevo-pedido";
+  toast.innerHTML = `
+    <strong>💬 Nuevo mensaje</strong>
+    <p>${escapeHtml(p.clienteNombre || "Cliente")} te escribió</p>
+    <a href="../chat.html?pedidoId=${pedidoId}">Ver conversación →</a>
+  `;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 9000);
+
+  if ("Notification" in window && Notification.permission === "granted") {
+    try {
+      new Notification("Nuevo mensaje en Mi Río Primero", {
+        body: `${p.clienteNombre || "Cliente"} te escribió`,
+      });
+    } catch (err) {
+      console.warn("No se pudo mostrar la notificación del navegador:", err);
+    }
+  }
+}
+
 function escucharPedidos() {
   const q = query(collection(db, "pedidos"), where("negocioId", "==", negocioId));
   onSnapshot(q, (snap) => {
     const wrap = document.getElementById("listaPedidos");
     const empty = document.getElementById("pedidosEmpty");
+
+    if (!negocioPedidosPrimerCarga) {
+      snap.docs.forEach((docSnap) => {
+        const p = docSnap.data();
+        const anterior = negocioPedidosNoLeidosAnterior.get(docSnap.id) || 0;
+        if ((p.negocioNoLeidos || 0) > anterior) {
+          mostrarToastNuevoMensaje(p, docSnap.id);
+        }
+      });
+    }
+    snap.docs.forEach((docSnap) => {
+      negocioPedidosNoLeidosAnterior.set(docSnap.id, docSnap.data().negocioNoLeidos || 0);
+    });
+    negocioPedidosPrimerCarga = false;
+
     wrap.innerHTML = "";
     const pedidosDelNegocio = snap.docs;
     if (pedidosDelNegocio.length === 0) {
@@ -455,6 +499,7 @@ function escucharPedidos() {
       .sort((a, b) => (b.data().createdAt?.seconds || 0) - (a.data().createdAt?.seconds || 0))
       .forEach((docSnap) => {
         const p = docSnap.data();
+        const noLeidos = p.negocioNoLeidos || 0;
         const div = document.createElement("div");
         div.style.cssText = "padding:16px 0; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap;";
         div.innerHTML = `
@@ -465,7 +510,10 @@ function escucharPedidos() {
             <p style="font-size:14px; margin:0;">Total: $${p.total ?? "—"}</p>
           </div>
           <div class="top-actions">
-            <a class="btn btn--outline btn--sm" href="../chat.html?pedidoId=${docSnap.id}">Abrir chat</a>
+            <a class="btn btn--outline btn--sm" href="../chat.html?pedidoId=${docSnap.id}" style="position:relative;">
+              Abrir chat
+              ${noLeidos > 0 ? `<span class="chat-no-leidos-badge">${noLeidos > 9 ? "9+" : noLeidos}</span>` : ""}
+            </a>
             ${p.estado === "pendiente" ? `<button class="btn btn--gold btn--sm" data-aceptar="${docSnap.id}">Aceptar</button>` : ""}
             ${p.estado === "en_proceso" ? `<button class="btn btn--gold btn--sm" data-completar="${docSnap.id}">Finalizar venta</button>` : ""}
             ${p.estado !== "completado" && p.estado !== "cancelado" ? `<button class="btn btn--danger btn--sm" data-cancelar="${docSnap.id}">Cancelar</button>` : ""}
