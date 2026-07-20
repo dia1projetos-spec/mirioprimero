@@ -114,11 +114,16 @@ una versión "de lujo":
   notificación del navegador) mientras tengas la pestaña de Mi Río Primero
   abierta en algún dispositivo — no llega si cerraste el navegador del todo,
   por la misma razón de arriba.
-- **Carrito de compras**: el cliente agrega productos al carrito de una
-  tienda y confirma todo junto (con un solo delivery/cupón para todo el
-  pedido). El carrito se guarda en el navegador (localStorage), separado
-  por tienda — si cierra la página antes de confirmar, lo recupera al
-  volver a esa misma tienda.
+- **Carrito de compras**: es un carrito **global**, compartido entre todas
+  las tiendas — el cliente puede agregar productos directamente desde la
+  home o visitando cualquier tienda, y seguir sumando de otras tiendas sin
+  perder lo que ya tenía. Como cada pedido en el sistema pertenece a un solo
+  negocio (para que el delivery y el cupón tengan sentido), el carrito
+  agrupa los productos por tienda y cada grupo se finaliza por separado
+  ("Finalizar este pedido →"). El código vive en `js/carrito.js` +
+  `css/carrito.css`, compartido entre la home (`js/home.js`) y la tienda
+  (`js/cliente-tienda.js`). Se guarda en el navegador (localStorage), no en
+  Firestore.
 - **Aviso de nuevo mensaje para el negocio**: igual que con los pedidos,
   funciona en tiempo real (cartel + notificación del navegador + contador
   de mensajes sin responder junto al botón "Abrir chat") mientras el
